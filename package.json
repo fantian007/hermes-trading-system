@@ -1,0 +1,27 @@
+{
+  "name": "hermes-trading-system",
+  "version": "0.1.0",
+  "description": "AI Electoral Trading System — Multi-Agent automated trading with Hermes Kanban",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:init": "tsx sql/init.ts",
+    "db:seed": "tsx sql/seeds/seed.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0",
+    "longbridge": "^4.1.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/node": "^22.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
