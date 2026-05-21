@@ -46,10 +46,11 @@ import type {
 export function calculateWeight(agent: Agent): number {
   const { win_rate, total_trades } = agent;
 
-  // 经验因子：log2(1 + n)，n=0 时为 0（新人无投票权重）
-  const experienceFactor = Math.log2(1 + total_trades);
+  // 新手（0 笔交易）给基础权重 0.5，老手按胜率加权
+  const experienceFactor = total_trades === 0 ? 0.5 : Math.log2(1 + total_trades);
+  const baseWeight = total_trades === 0 ? 0.5 : win_rate;
 
-  return win_rate * experienceFactor;
+  return baseWeight * experienceFactor;
 }
 
 // ---------------------------------------------------------------------------
@@ -250,7 +251,7 @@ export function recordVotes(
 
   const effectiveTradeId = tradeId || roundId;
 
-  const runAll = runInTransaction(() => {
+  runInTransaction(() => {
     for (const vote of votes) {
       const agentStatus = statusMap.get(vote.agent_id) ?? 'ACTIVE';
       insertStmt.run({
@@ -267,8 +268,6 @@ export function recordVotes(
       });
     }
   });
-
-  runAll();
 }
 
 /**

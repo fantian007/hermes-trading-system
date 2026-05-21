@@ -73,7 +73,7 @@ async function main() {
     console.log(JSON.stringify({ error: 'Failed to get quote' }));
     process.exit(1);
   }
-  const currentPrice = quoteResult[0].lastDone || quoteResult[0].last_done;
+  const currentPrice = quoteResult[0].last || 0;
 
   // 2. 风控检查
   const existingQty = existingPos?.quantity ?? 0;

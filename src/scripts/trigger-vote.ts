@@ -48,7 +48,7 @@ async function main() {
     if (!quotes || quotes.length === 0) continue;
 
     const q = quotes[0];
-    const currentPrice = q.lastDone || q.last_done || 0;
+    const currentPrice = q.last || 0;
     if (!currentPrice) continue;
 
     // 根据信号类型决定投票节点
@@ -59,8 +59,7 @@ async function main() {
       'PRICE_BREAKOUT',
       item.reason,
       currentPrice,
-      voteNode,
-      item.strength
+      voteNode
     );
 
     console.log(`[watch] ${item.symbol} — created ${roundId} | price=${currentPrice} | node=${voteNode}`);

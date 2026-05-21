@@ -68,11 +68,11 @@ async function main() {
     process.exit(1);
   }
 
-  // 记录投票到 DB
-  recordVotes(roundId, votes);
+  // 记录投票到 DB (用 roundId 作为临时 trade_id)
+  recordVotes(votes, roundId, round.symbol, roundId, 'BUY');
 
   // 聚合投票
-  const summary = aggregateVotes(roundId, round.symbol, votes);
+  const summary = aggregateVotes(roundId, votes);
 
   // 更新选举轮次
   updateElectionRound(roundId, summary);
