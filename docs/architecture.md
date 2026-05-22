@@ -1,6 +1,6 @@
-# AI 选举交易系统 — 技术方案 v3
+# AI 选举交易系统 — 技术方案 v4
 
-> **版本**: Phase 1 MVP v2026.05 | **状态**: 编码完成 | **Agent 数量**: 15 | **部门**: 6 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，6 位分析师自主分析
+> **版本**: Phase 1 MVP v2026.05 | **状态**: 编码完成 | **Agent 数量**: 18 | **部门**: 7 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，7 位分析师自主分析
 
 ---
 
@@ -29,7 +29,7 @@
 ```mermaid
 graph TB
     subgraph "策略阶段（自主分析）"
-        STRATEGY[策略Agent ×6<br/>strategy-01~06] ==>|"自己找 data-agent 查数据<br/>自己分析、自己判断<br/>发现机会后发起投票请求"| EC[选举委员会<br/>election-committee]
+        STRATEGY[策略Agent ×7<br/>strategy-01~07] ==>|"自己找 data-agent 查数据<br/>自己分析、自己判断<br/>发现机会后发起投票请求"| EC[选举委员会<br/>election-committee]
     end
 
     subgraph "投票阶段"
@@ -43,7 +43,7 @@ graph TB
         DECISION ==>|"BUY/SELL指令"| EXEC[执行部门<br/>execution-agent]
         EXEC ==>|"风控判断→向数据部门提需求"| DATA[数据部门<br/>data-agent]
         DATA ==>|"跑 execute-decision.ts"| TRADE[(交易记录<br/>trades)]
-        DATA ==>|"交易完成通知"| REVIEW[审核部门 ×5<br/>review-01~05]
+        DATA ==>|"交易完成通知"| REVIEW[审核部门 ×6<br/>review-01~06]
     end
 
     subgraph "审核阶段（事后）"
@@ -131,7 +131,7 @@ graph TB
 - 交易执行由执行部门提需求 → 数据部门执行 → 结果返回给执行部门
 - 数据部门不做风控判断，收到指令就执行
 
-#### 策略部门 — strategy-01~06
+#### 策略部门 — strategy-01~07
 
 ```
 角色定位：独立分析师团队，自主排班、自主分析、自主投票
@@ -194,7 +194,7 @@ flowchart TB
 | 下单量 | 代码自动计算 | Agent 自己算 |
 | 最终决策 | 代码输出 BUY/SELL/HOLD | Agent 自己拍板 |
 
-#### 审核部门 ×5 — review-01~05
+#### 审核部门 ×6 — review-01~06
 
 **纯事后审核。** 不参与任何事前流程——不投票、不预测、不分析候选标的。
 交易执行完成后，数据部门将交易详情发送给审核部门，审核官基于各自框架评估决策质量。
@@ -320,7 +320,7 @@ npx tsx src/scripts/onboard-agent.ts --list
 其他 Agent 如果不知道某个需求该找谁，可以问 HR 部门。
 HR 查阅知识库后，**优先返回该部门的组长**（如果是多人部门）：
 "帮我查 NVDA 报价" → "这是数据部门的事，找组长 data-agent"
-"对交易结果不满意需要申诉" → "找 election-committee，或审核部门组长 review-01"
+"对交易结果不满意需要申诉" → "找 election-committee"
 "有人事问题" → "我来查一下胜率排名，直接帮你处理"
 
 **③ Agent 绩效审计（定期执行）**
