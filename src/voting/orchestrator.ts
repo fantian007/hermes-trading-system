@@ -40,11 +40,11 @@ function getAgentsByStatus(status: string): Agent[] {
 // ---------------------------------------------------------------------------
 
 /**
- * 创建选举轮次
+ * 创建选举轮次（含冷却检查）
  *
  * 在 election_rounds 表中插入一条新记录，代表一次投票事件的开始。
- * 初始状态：total_voters / buy_votes / sell_votes / hold_votes 均为 0，
- * final_decision 默认为 HOLD（尚未出结果）。
+ * **冷却规则：同一标的在一小时内不能重复发起投票轮次。**
+ * 如果存在一小时内的同标的轮次，则抛出错误。
  *
  * @param symbol       - 股票代码，如 "NVDA.US"
  * @param triggerType  - 触发类型（价格突破 / 新闻 / 社交热度等）
@@ -52,6 +52,7 @@ function getAgentsByStatus(status: string): Agent[] {
  * @param currentPrice - 当前价格
  * @param voteNode     - 本轮投票关注的节点：BUY 或 SELL
  * @returns 生成的 round_id
+ * @throws 如果一小时内有同标的的轮次
  */
 export function createElectionRound(
   symbol: string,
@@ -60,6 +61,17 @@ export function createElectionRound(
   currentPrice: number,
   voteNode: VoteNode,
 ): string {
+  // 冷却检查：一小时内的同标的轮次
+  const recent = getDb().prepare(`
+    SELECT round_id, created_at FROM election_rounds
+    WHERE symbol = ? AND created_at > datetime('now', '-1 hour')
+    ORDER BY created_at DESC LIMIT 1
+  `).get(symbol) as { round_id: string; created_at: string } | undefined;
+
+  if (recent) {
+    throw new Error(`Cooling: symbol ${symbol} already has a round ${recent.round_id} created at ${recent.created_at} (within 1 hour)`);
+  }
+
   const roundId = generateRoundId();
   const now = new Date().toISOString();
 
