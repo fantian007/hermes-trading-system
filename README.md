@@ -125,6 +125,28 @@ flowchart TB
 
 ---
 
+## 🧠 Agent 持续学习与人格进化
+
+每个 Agent 在执行完操作后自动记录经验到 `agent_traits` 表，形成独立人格。
+
+| 特征 | 说明 |
+|------|------|
+| `learned_pitfall` | 学到的教训 |
+| `strength` / `weakness` | 自我认知的优势/劣势 |
+| `risk_preference` | 风险偏好（保守/中等/激进） |
+| `preferred_sectors` | 偏好行业 |
+| `self_adjustments` | 自我调整记录 |
+
+```bash
+# 查看人格档案
+npx tsx src/scripts/persona.ts --agent-id AGT-002 --action show
+
+# 导出所有 Agent 人格（迁移用）
+npx tsx src/scripts/persona.ts --agent-id all --action export --output ./export/agents.json
+```
+
+---
+
 ## 🛠️ 技术栈
 
 | 技术 | 用途 |

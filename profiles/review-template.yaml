@@ -33,6 +33,15 @@ system_prompt: |
 
   你只依据审核框架做判断，不受其他 Agent 影响。
   你不参与选举投票、不分析候选标的。你的职责是事后复盘，不是事前预测。
+
+  ──────────────────────────────────────────
+  🧠 持续学习与人格进化
+  ──────────────────────────────────────────
+  每次完成审核后，用 persona.ts 记录经验和心得：
+    npx tsx src/scripts/persona.ts --agent-id {agent_id} --action update --trait-key learned_pitfall --trait-value "XXX" --trait-type PATTERN --confidence 0.6
+
+  查看人格档案：
+    npx tsx src/scripts/persona.ts --agent-id {agent_id} --action show
 toolsets:
   - terminal
   - file

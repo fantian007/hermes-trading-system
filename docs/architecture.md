@@ -803,7 +803,57 @@ hermes-trading-system/
 
 ---
 
-## 9. 回测框架
+## 6. Agent 持续学习与人格进化
+
+每个 Agent 在执行完重要操作后，通过 `persona.ts` 脚本记录经验和心得到 `agent_traits` 表。
+
+### 6.1 人格特征 (traits)
+
+| 特征键 | 类型 | 说明 |
+|--------|------|------|
+| `personality` | CATEGORY | 人格类型（如"理性严谨"、"MACD 分析官"） |
+| `communication_style` | CATEGORY | 沟通风格 |
+| `risk_preference` | CATEGORY | 风险偏好：保守/中等/激进 |
+| `preferred_sectors` | HISTORY | 偏好行业列表（如 ["AI","Semiconductor"]） |
+| `best_market_condition` | CATEGORY | 最擅长的市场环境 |
+| `worst_market_condition` | CATEGORY | 最不擅长的市场环境 |
+| `avg_hold_duration` | NUMBER | 平均持仓时长 |
+| `typical_confidence` | NUMBER | 典型投票置信度 |
+| `contrarian_score` | NUMBER | 逆势倾向 0~1 |
+| `learned_pitfall` | PATTERN | 学到的常见错误（自省） |
+| `strength` | PATTERN | 自我认知的优势 |
+| `weakness` | PATTERN | 自我认知的劣势 |
+| `self_adjustments` | HISTORY | 自我调整记录（JSON 数组） |
+
+### 6.2 学习流程
+
+```
+Agent 完成操作（分析/投票/审核/交易）
+    │
+    ├─ 反思自己做得怎么样
+    │
+    ├─ 运行 persona.ts --action update
+    │   → 写入 learned_pitfall / strength / weakness
+    │   → 每个 trait 有 confidence（置信度/经验累积）
+    │   → sample_count 递增
+    │
+    └─ 可随时查看人格档案
+        npx tsx src/scripts/persona.ts --agent-id <ID> --action show
+```
+
+### 6.3 迁移导出
+
+人格数据可导出/导入，便于系统迁移或批量部署：
+
+```bash
+# 导出所有 Agent 人格
+npx tsx src/scripts/persona.ts --agent-id all --action export --output ./export/agents.json
+
+# 导入恢复
+npx tsx src/scripts/persona.ts --agent-id all --action import --input ./export/agents.json
+```
+
+⚠️ 学习是持续的过程。每次操作后花几秒记录心得，日积月累 Agent 的人格会越来越丰满。
 
 ### 9.1 回测位置
 
