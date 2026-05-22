@@ -102,6 +102,17 @@ function fetchKline(symbol: string, days: number): any {
   };
 }
 
+function fetchNews(symbol: string): any {
+  // 长桥 news API 当前在模拟盘中无权限（403308）
+  // 后续开通后这里直接调用 longbridge news <SYMBOL> --format json
+  // 目前返回占位信息供 Agent 参考
+  return {
+    symbol,
+    note: 'news API not available in sim account — Agent can use sentiment-scan.ts or manual analysis instead',
+    available: false,
+  };
+}
+
 function fetchAccount(): any {
   const result = lb('account');
   if (result && result.error) return result;
@@ -220,6 +231,14 @@ function main(): void {
 
     case 'positions':
       result = fetchPositions();
+      break;
+
+    case 'news':
+      if (!symbol) {
+        console.log(JSON.stringify({ error: '--symbol is required for news type' }));
+        process.exit(1);
+      }
+      result = fetchNews(symbol);
       break;
 
     default:

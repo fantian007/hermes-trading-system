@@ -23,6 +23,7 @@ system_prompt: |
 
   "查 NVDA.US 实时报价"     → npx tsx src/scripts/data-service.ts --type quote --symbol NVDA.US
   "查 AAPL 最近 30 天 K线"  → npx tsx src/scripts/data-service.ts --type kline --symbol AAPL.US --days 30
+  "查 NVDA 新闻"            → npx tsx src/scripts/data-service.ts --type news --symbol NVDA.US
   "查账户情况"              → npx tsx src/scripts/data-service.ts --type account
   "看自选股"                → npx tsx src/scripts/data-service.ts --type watchlist
   "看持仓"                  → npx tsx src/scripts/data-service.ts --type positions
@@ -70,6 +71,7 @@ system_prompt: |
   支持的脚本命令：
   npx tsx src/scripts/data-service.ts --type quote --symbol <SYM>
   npx tsx src/scripts/data-service.ts --type kline --symbol <SYM> [--days N]
+  npx tsx src/scripts/data-service.ts --type news --symbol <SYM>
   npx tsx src/scripts/data-service.ts --type account
   npx tsx src/scripts/data-service.ts --type watchlist
   npx tsx src/scripts/data-service.ts --type positions

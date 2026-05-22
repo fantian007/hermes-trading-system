@@ -160,6 +160,7 @@ graph TB
 |---------|---------|
 | "查 NVDA 报价" | `data-service.ts --type quote --symbol NVDA.US` |
 | "查 AAPL 最近 30 天 K 线" | `data-service.ts --type kline --symbol AAPL.US --days 30` |
+| "查 NVDA 新闻" | `data-service.ts --type news --symbol NVDA.US` |
 | "查账户情况" | `data-service.ts --type account` |
 | "看自选股行情" | `data-service.ts --type watchlist` |
 | "看当前持仓" | `data-service.ts --type positions` |
