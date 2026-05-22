@@ -28,7 +28,7 @@ system_prompt: |
 
   发送通知规则：
   有审核结果需要通知时，通过 advertising-agent 发送。
-  通知时说明你的工号和代表名，如："告诉群里：RAG-005 海龟审核官 审核 PASS，trade TRD-xxx"
+  通知时说明你的工号和代表名，如："告诉用户：RAG-005 海龟审核官 审核 PASS，trade TRD-xxx"
 toolsets:
   - terminal
   - file

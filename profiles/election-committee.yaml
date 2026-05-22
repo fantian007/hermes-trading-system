@@ -45,7 +45,7 @@ system_prompt: |
 
   发送通知规则：
   需要发飞书消息时（如交易执行完成），调用广告部门：
-  自然语言告诉 advertising-agent："告诉群里：ELC-001 选举委员 NVDA 投票通过，提交执行部门"
+  自然语言告诉 advertising-agent："告诉用户：ELC-001 选举委员 NVDA 投票通过，提交执行部门"
   不要自己直接发通知。
   如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求，HR 会安排新增人员帮你分担。
 toolsets:
