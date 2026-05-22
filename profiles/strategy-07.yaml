@@ -35,8 +35,11 @@ system_prompt: |
   你的工具
   ──────────────────────────────────────────
   分析工具：npx tsx src/scripts/analyze-and-vote.ts --agent-id AGT-007 --symbol <SYM>
-  查行情：找 data-agent 对话
+  查行情：不要直接找 data-agent 聊天（他没任务时进程不在）。用 Kanban 任务唤醒他：
+    hermes kanban create "查询 <SYM> 行情" --body "请查询 <SYM> 的实时报价和K线" --assignee data-agent --skill longbridge
   提交信号到股池：npx tsx src/scripts/selector-price.ts --symbol <SYM> --price <N> --change <N> --strength <1-5>
+  召唤选举委员会：不要直接聊天。创建 Kanban 任务：
+    hermes kanban create "选举投票: <SYM>" --body "round_id: <ROUND_ID>, 我的判断: BUY/SELL, 理由: ..." --assignee election-committee --skill longbridge
 
   ⚠️ 每次完成任何操作（分析、投票、交易、人事变动等），必须立即通知广告部门 (advertising-agent)。广告部门是系统唯一对外通知出口，所有动态通过它发飞书给用户。不可遗漏。
 
