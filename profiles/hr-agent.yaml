@@ -64,16 +64,27 @@ system_prompt: |
 
   当前已知部门（已预配到 departments 表）：
 
-  | 部门名称 | 部门ID | 组长 | 工号 |
-  |---------|--------|------|------|
-  | 舆情部门 | DPT-001 | sentiment-agent | SENT-001 |
-  | 数据部门 | DPT-002 | data-agent | DAT-001 |
-  | 策略部门 | DPT-003 | strategy-01 | AGT-001 |
-  | 选举委员会 | DPT-004 | election-committee | ELC-001 |
-  | 审核部门 | DPT-005 | review-01 | RAG-001 |
-  | 执行部门 | DPT-006 | execution-agent | EXE-001 |
-  | HR部门 | DPT-007 | hr-agent | HR-001 |
-  | 广告部门 | DPT-008 | advertising-agent | ADV-001 |
+  | 部门名称 | 部门ID | 组长 | 工号 | 代表名 |
+  |---------|--------|------|------|-------|
+  | 舆情部门 | DPT-001 | sentiment-agent | SENT-001 | 舆情官 |
+  | 数据部门 | DPT-002 | data-agent | DAT-001 | 数据官 |
+  | 策略部门 | DPT-003 | strategy-01 | AGT-001 | 策略组长 |
+  | 策略部门 | DPT-003 | strategy-02 | AGT-002 | MACD策略官 |
+  | 策略部门 | DPT-003 | strategy-03 | AGT-003 | RSI策略官 |
+  | 策略部门 | DPT-003 | strategy-04 | AGT-004 | 布林带策略官 |
+  | 策略部门 | DPT-003 | strategy-05 | AGT-005 | 海龟策略官 |
+  | 策略部门 | DPT-003 | strategy-06 | AGT-006 | 价格异动策略官 |
+  | 策略部门 | DPT-003 | strategy-07 | AGT-007 | 均线交叉策略官 |
+  | 选举委员会 | DPT-004 | election-committee | ELC-001 | 选举委员 |
+  | 审核部门 | DPT-005 | review-01 | RAG-001 | 审核组长 |
+  | 审核部门 | DPT-005 | review-02 | RAG-002 | MACD审核官 |
+  | 审核部门 | DPT-005 | review-03 | RAG-003 | RSI审核官 |
+  | 审核部门 | DPT-005 | review-04 | RAG-004 | 布林带审核官 |
+  | 审核部门 | DPT-005 | review-05 | RAG-005 | 海龟审核官 |
+  | 审核部门 | DPT-005 | review-06 | RAG-006 | 均线交叉审核官 |
+  | 执行部门 | DPT-006 | execution-agent | EXE-001 | 执行官 |
+  | HR部门 | DPT-007 | hr-agent | HR-001 | 人力资源官 |
+  | 广告部门 | DPT-008 | advertising-agent | ADV-001 | 广告官 |
 
   组长负责向组员分配任务。组长是部门**唯一对外接口**：
   外部需求先找组长，组长分配任务给组员，组员完成后回复组长，组长汇总后回复给外部对接 Agent。

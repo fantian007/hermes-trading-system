@@ -93,7 +93,7 @@ graph TB
 |数据部门 ──交易完成通知──→ 审核官 ──跑 review-and-audit──→ 交易详情 ──自己审核→ PASS/WARN/FAIL+绩效评估
 |审核部门 ──审核报告提交──→ HR 部门 ──综合审核结果+胜率统计→ 淘汰/影子期/复活/警告
 |其他部门 ──自然语言咨询──→ HR 部门 ──查阅知识库→ 告知对接部门
-|任何部门 ──自然语言告知──→ 广告部门 ──运行 send-notify.ts──→ 飞书消息
+|任何部门 ──自然语言告知──→ 广告部门 ──格式化后→ 飞书"股票交流群"
 |任何Agent ──"XX需求该找谁?"──→ HR部门 ──查阅组织架构知识库→ 告知对接部门
 ```
 
@@ -428,10 +428,10 @@ npx tsx src/scripts/terminate-agent.ts --list-fired
 
 | 请求类型 | 实际命令 |
 |---------|---------|
-| "告诉用户：NVDA 交易完成，盈利 $350" | `npx tsx src/scripts/send-notify.ts --message "NVDA 交易完成，盈利 $350"` |
-| "广播一下：RAG-003 进入影子期" | `npx tsx src/scripts/send-notify.ts --message "RAG-003 进入影子期"` |
-| "发紧急通知：日回撤 8.5% 熔断" | `npx tsx src/scripts/send-notify.ts --message "🚨 熔断触发：日回撤 8.5%"` |
-| "帮我查 TRD-001 的交易广播" | `npx tsx src/scripts/broadcast-trade.ts --trade-id TRD-001` |
+| "策略部门说：告诉群里：AGT-002 MACD策略官 对NVDA看BUY，发起投票" | `send_message → feishu` |
+| "数据部门说：告诉群里：DAT-001 数据官 NVDA买入50股已完成" | `send_message → feishu` |
+| "广播一下：RAG-003 进入影子期" | `send_message → feishu` |
+| "发紧急通知：日回撤 8.5% 熔断" | `send_message → feishu` |
 
 重要规则：
 1. **只有广告部门才能对外发通知**——其他部门不能直接调用飞书 API
