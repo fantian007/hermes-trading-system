@@ -1,14 +1,15 @@
 /**
- * 交易广播脚本
+ * 交易广播 — PURE DATA TOOL
+ *
+ * 职责（仅此一项）：
+ *   从 DB 读取交易记录，输出完整 JSON（含参与投票的 Agent 列表）。
+ *   不发送任何通知 — Agent 之间通过自然语言沟通。
  *
  * 用法：
  *   npx tsx src/scripts/broadcast-trade.ts --trade-id TRD-20260521-001
- *
- * 执行 Agent 在交易关闭后调用，通知所有策略 Agent 自判胜负。
  */
 
 import { getDb } from '../core/db.js';
-import { sendMessage } from '../notify/feishu.js';
 import type { TradeBroadcast } from '../core/types.js';
 
 function parseArgs() {
@@ -34,9 +35,9 @@ async function main() {
     process.exit(1);
   }
 
-  // 获取参与此轮投票的所有 agent
-  const votes = getDb().prepare('SELECT DISTINCT agent_id FROM agent_votes WHERE trade_id = ?').all(tradeId) as any[];
-  const agentIds = votes.map((v: any) => v.agent_id);
+  // Get agents who voted on this trade
+  const votes = getDb().prepare('SELECT DISTINCT agent_id, vote_direction FROM agent_votes WHERE trade_id = ?').all(tradeId) as any[];
+  const agentVotes = votes.map((v: any) => ({ agent_id: v.agent_id, vote_direction: v.vote_direction }));
 
   const broadcast: TradeBroadcast = {
     trade_id: trade.trade_id,
@@ -50,25 +51,14 @@ async function main() {
     approved_by: trade.approved_by,
   };
 
-  // 飞书通知
-  const emoji = (trade.pnl ?? 0) >= 0 ? '🟢' : '🔴';
-  await sendMessage(
-    `${emoji} 交易关闭\n` +
-    `${trade.symbol} | ${trade.direction}\n` +
-    `买入 $${trade.buy_price} → 卖出 $${trade.sell_price}\n` +
-    `盈亏 ${trade.pnl_pct?.toFixed?.(2) ?? '?'}% ($${trade.pnl?.toFixed?.(2) ?? '?'})\n` +
-    `轮次: ${trade.approved_by}\n` +
-    `参与投票: ${agentIds.length} 个 Agent`
-  );
-
-  const output = {
-    status: 'broadcast',
-    trade_id: tradeId,
-    agent_count: agentIds.length,
-    agent_ids: agentIds,
-  };
-
-  console.log(JSON.stringify(output));
+  // Output pure JSON — Agent does the natural language communication
+  console.log(JSON.stringify({
+    type: 'trade_broadcast',
+    trade: broadcast,
+    participating_agents: agentVotes,
+    direction: trade.direction,
+    quantity: trade.quantity,
+  }));
 }
 
 main().catch(console.error);

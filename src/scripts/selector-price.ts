@@ -1,53 +1,99 @@
 /**
- * 选股 Agent — 价格异动
+ * 选股 Agent — 价格异动信号提交工具
  *
- * 独立监控价格涨跌幅，发现异常波动 → 自主提交信号到股池。
- * 每个 Agent 独立运行，不依赖其他 Agent。
+ * 职责（仅此一项）：
+ *   接受 Agent 自然语言决策后的结果，提交一个信号到候选股池。
+ *   不做任何行情获取 — 那是 data-agent 的工作。
  *
- * 行情数据获取方式：
- *   不再直接调用 longbridge CLI，而是通过 data-agent（数据部门）获取。
- *   Agent 之间自然语言对话：向 data-agent 请求报价和 K 线数据。
+ * 典型流程：
+ *   1. Agent 向 data-agent 请求报价和 K 线数据
+ *   2. Agent 分析后决定："NVDA 突破布林带上轨，涨幅 2.3%，应该提交信号"
+ *   3. Agent 运行此脚本提交信号
  *
  * 用法：
- *   npx tsx src/scripts/selector-price.ts
+ *   npx tsx src/scripts/selector-price.ts \
+ *     --symbol NVDA.US \
+ *     --price 125.50 \
+ *     --change 2.3
+ *
+ * 参数：
+ *   --symbol    股票代码（必填）
+ *   --price     当前价格（选填，仅用于记录）
+ *   --change    涨跌幅百分比（选填，仅用于记录）
+ *   --type      信号类型 BULLISH|BEARISH（默认 BULLISH）
+ *   --strength  信号强度 1-5（默认 3）
+ *   --reason    触发原因描述（选填，自动拼接）
+ *   --agent-id  Agent ID（默认 AGT-SEL-01）
  */
 
-import { execSync } from 'node:child_process';
+import { addSignal } from '../pool/stock-pool.js';
 
-const SYMBOLS = ['NVDA.US', 'AAPL.US', 'TSLA.US', 'MSFT.US', 'GOOGL.US', 'AMZN.US', 'META.US'];
+function parseArgs(): {
+  symbol: string;
+  price: number;
+  change: number;
+  type: 'BULLISH' | 'BEARISH';
+  strength: number;
+  reason: string;
+  agentId: string;
+} {
+  const args = process.argv.slice(2);
+  const get = (key: string) => {
+    const idx = args.indexOf(`--${key}`);
+    return idx >= 0 ? args[idx + 1] : '';
+  };
 
-function submit(symbol: string, type: string, strength: number, source: string, reason: string) {
-  execSync(`npx tsx src/scripts/submit-signal.ts --symbol ${symbol} --type ${type} --strength ${strength} --source ${source} --reason "${reason}" --agent-id AGT-SEL-01`, { timeout: 10000 });
+  const symbol = get('symbol');
+  const price = parseFloat(get('price') || '0');
+  const change = parseFloat(get('change') || '0');
+  const type = (get('type') || 'BULLISH') as 'BULLISH' | 'BEARISH';
+
+  // Build reason automatically from provided data
+  let reason = get('reason');
+  if (!reason && price > 0) {
+    const direction = change >= 0 ? '上涨' : '下跌';
+    reason = `${symbol} 价格异动: $${price} (${direction} ${Math.abs(change)}%)`;
+  }
+
+  return {
+    symbol,
+    price,
+    change,
+    type,
+    strength: parseInt(get('strength') || '3', 10),
+    reason: reason || `${symbol} 价格异动信号`,
+    agentId: get('agent-id') || 'AGT-SEL-01',
+  };
 }
 
 async function main() {
-  console.log('[selector-price] 启动扫描...');
-  console.log('[selector-price] (数据通过 data-agent 获取 — 请向 data-agent 请求报价和 K 线)');
+  const { symbol, price, change, type, strength, reason, agentId } = parseArgs();
 
-  // 数据获取：
-  // 向 data-agent 请求：
-  //   1. "帮我查一下各标的的实时报价" → data-service --type quote --symbol <SYM>
-  //   2. "帮我查一下各标的的 K 线数据" → data-service --type kline --symbol <SYM> --days 25
-  // 然后基于返回的价格和 K 线数据判断异动并提交信号。
-
-  for (const sym of SYMBOLS) {
-    // 向数据部门请求行情数据
-    // 示例: Agent 对话 → data-agent 执行 data-service → 返回 JSON
-    // 以下为示意性代码，实际运行时 Agent 通过自然语言向 data-agent 请求数据
-    console.log(`[selector-price] 向 data-agent 查询 ${sym} 行情数据...`);
-
-    // 实际 Agent 流程：
-    // 1. 问 data-agent: "帮我查一下 ${sym} 的实时报价和最近 25 天 K 线"
-    // 2. data-agent 运行:
-    //    npx tsx src/scripts/data-service.ts --type quote --symbol ${sym}
-    //    npx tsx src/scripts/data-service.ts --type kline --symbol ${sym} --days 25
-    // 3. data-agent 返回 JSON 结果
-    // 4. 本 Agent 根据价格变化判断并提交信号
-
-    console.log(`[selector-price] 请先向 data-agent 获取 ${sym} 的报价数据，然后判断异动并提交信号`);
+  if (!symbol) {
+    console.error('Usage: selector-price.ts --symbol <SYM> [--price <N>] [--change <N>] [--type BULLISH|BEARISH] [--strength 1-5] [--reason "..."] [--agent-id AGT-XXX]');
+    process.exit(1);
   }
-  console.log('[selector-price] 扫描完成');
-  console.log('[selector-price] 提醒：请向 data-agent 请求行情数据后，根据返回结果判断是否提交信号');
+
+  // Submit signal to stock pool (pure data action)
+  addSignal({
+    symbol,
+    signal_type: type,
+    strength,
+    source: 'PRICE_BREAKOUT',
+    reason,
+    agent_id: agentId,
+  });
+
+  console.log(JSON.stringify({
+    type: 'signal_submitted',
+    status: 'ok',
+    symbol,
+    signal_type: type,
+    strength,
+    reason,
+    price,
+    change_pct: change,
+  }));
 }
 
 main().catch(console.error);

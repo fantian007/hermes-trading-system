@@ -1,19 +1,32 @@
 /**
- * 投票聚合 + 决策脚本
+ * 投票聚合 — PURE STATS TOOL
+ *
+ * 职责（仅此一项）：
+ *   从 DB 读取某选举轮次的投票记录，输出加权统计（count 和 weighted score）。
+ *   不执行任何决策算法，不判断胜负。
+ *
+ * 所有业务决策交给 Agent 自然语言：
+ *   - Agent（选举委员会）读取 JSON 后这样说：
+ *     "有 4 票 BUY 和 2 票 SELL，加权 buy 2.5 vs sell 0.8，我认为应该 BUY"
  *
  * 用法：
  *   npx tsx src/scripts/aggregate-votes.ts --round-id ELEC-20260521-1430
- *
- * 选举委员调用此脚本：
- *   1. 等待所有策略 Agent 投票完成（或超时）
- *   2. 聚合投票结果
- *   3. 执行决策算法
- *   4. 输出最终决策到 stdout
  */
 
-import { aggregateVotes, recordVotes, updateElectionRound } from '../voting/aggregator.js';
 import { getDb } from '../core/db.js';
-import type { VoteResponse } from '../core/types.js';
+import type { VoteResponse, Agent } from '../core/types.js';
+
+// ---- Weight calculation (pure math, not business logic) ----
+
+/** 计算智能体的投票权重（纯数学公式：win_rate × log2(1 + total_trades)） */
+function calculateWeight(agent: Agent): number {
+  const { win_rate, total_trades } = agent;
+  const experienceFactor = total_trades === 0 ? 0.5 : Math.log2(1 + total_trades);
+  const baseWeight = total_trades === 0 ? 0.5 : win_rate;
+  return baseWeight * experienceFactor;
+}
+
+// ---- Arg parsing ----
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -32,63 +45,66 @@ async function main() {
     process.exit(1);
   }
 
-  // 读取选举轮次信息
+  // Load round info
   const round = getDb().prepare('SELECT * FROM election_rounds WHERE round_id = ?').get(roundId) as any;
   if (!round) {
     console.log(JSON.stringify({ error: `Round ${roundId} not found` }));
     process.exit(1);
   }
 
-  // 读取 stdin 中的投票（由协调脚本传入）
-  // 投票格式：每行一个 JSON VoteResponse
-  const votes: VoteResponse[] = [];
-  
-  process.stdin.setEncoding('utf-8');
-  let input = '';
-  
-  for await (const chunk of process.stdin) {
-    input += chunk;
-  }
+  // Load all votes from DB for this round
+  const voteRows = getDb().prepare(`
+    SELECT vote_id, agent_id, vote_direction, confidence, reasoning, is_shadow
+    FROM agent_votes
+    WHERE trade_id = ? OR trade_id = ?
+  `).all(roundId, roundId) as any[];
 
-  // 解析输入
-  const lines = input.trim().split('\n').filter(Boolean);
-  for (const line of lines) {
-    try {
-      const vote = JSON.parse(line) as VoteResponse;
-      if (vote.agent_id && vote.round_id && vote.vote_direction) {
-        votes.push(vote);
-      }
-    } catch {
-      // 跳过无效行
-    }
-  }
-
-  if (votes.length === 0) {
-    console.log(JSON.stringify({ error: 'No valid votes received', roundId }));
+  if (voteRows.length === 0) {
+    console.log(JSON.stringify({ error: 'No votes found for this round', roundId }));
     process.exit(1);
   }
 
-  // 记录投票到 DB (用 roundId 作为临时 trade_id)
-  recordVotes(votes, roundId, round.symbol, roundId, 'BUY');
+  // Load ACTIVE agents for weight calculation
+  const activeAgents = getDb().prepare('SELECT * FROM agents WHERE status = ?').all('ACTIVE') as Agent[];
+  const weightMap = new Map<string, number>();
+  for (const agent of activeAgents) {
+    weightMap.set(agent.agent_id, calculateWeight(agent));
+  }
 
-  // 聚合投票
-  const summary = aggregateVotes(roundId, votes);
-
-  // 更新选举轮次
-  updateElectionRound(roundId, summary);
-
-  // 输出最终决策
-  const output = {
-    round_id: roundId,
-    symbol: round.symbol,
-    vote_node: round.vote_node || summary.vote_node,
-    final_decision: summary.winning_direction,
-    confidence: summary.winning_confidence,
-    results: summary.results,
-    total_voters: summary.total_voters,
+  // Aggregate weighted counts (PURE STATS — no decision algorithm)
+  const results = {
+    buy:  { count: 0, weighted: 0 },
+    sell: { count: 0, weighted: 0 },
+    hold: { count: 0, weighted: 0 },
   };
 
-  console.log(JSON.stringify(output));
+  let totalActiveVoters = 0;
+  const votes: Array<{ agent_id: string; vote_direction: string; weighted: number }> = [];
+
+  for (const row of voteRows) {
+    const weight = weightMap.get(row.agent_id) ?? 0;
+    if (weight > 0) {
+      totalActiveVoters++;
+    }
+    const dir = (row.vote_direction || 'hold').toLowerCase() as 'buy' | 'sell' | 'hold';
+    results[dir].count += (weight > 0 ? 1 : 0);
+    results[dir].weighted += weight;
+    votes.push({
+      agent_id: row.agent_id,
+      vote_direction: row.vote_direction,
+      weighted: weight,
+    });
+  }
+
+  // Output stats only — NO decision
+  console.log(JSON.stringify({
+    type: 'vote_stats',
+    round_id: roundId,
+    symbol: round.symbol,
+    total_active_voters: totalActiveVoters,
+    results,
+    individual_votes: votes,
+  }));
 }
 
 main().catch(console.error);

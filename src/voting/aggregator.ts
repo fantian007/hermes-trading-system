@@ -2,21 +2,18 @@
  * 投票聚合引擎 — Vote Aggregator
  *
  * 核心职责：
- *   1. 计算每个智能体的加权投票权重
- *   2. 汇总所有投票结果，执行 4 步选举算法
+ *   1. 计算每个智能体的加权投票权重（纯数学）
+ *   2. 汇总所有投票结果（加权计数）
  *   3. 将投票记录持久化到 agent_votes 表
- *   4. 更新 election_rounds 表，写入最终决策
  *
- * 选举算法（4 步）：
- *   Step 1 — 按权重累加各方向的加权得票
- *   Step 2 — 投票人数不足 minVoters → 裁决 HOLD
- *   Step 3 — HOLD 比例 > holdRatioMax → 裁决 HOLD
- *   Step 4 — 领先方向得票率 ≥ directionThreshold → 裁决该方向，否则 HOLD
+ * ⚠️ 决策算法不在代码中
+ * ───────────────────────────────
+ * 选举委员会 Agent 通过自然语言读取聚合结果后，自己做出最终决策。
+ * 代码只提供加权数据，不做 BUY/SELL/HOLD 判定。
  *
  * 事后审计：
  *   交易执行后，Review Agent 使用 review-and-audit.ts 脚本加载交易数据 + 选举委员会推理 +
  *   Agent 投票记录，以自然语言给出最终审计结论（APPROVE / FLAG / REJECT）。
- *   该审计结论通过 agent_votes 和 election_rounds 表中的数据完成，不改变聚合逻辑。
  */
 
 import { getDb, prepare, runInTransaction } from '../core/db.js';
