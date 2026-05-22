@@ -255,14 +255,37 @@ HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent
 
 HR 部门的三项核心事务：
 
-**① 组织架构咨询（被动响应）**
+**① 入职管理（新 Agent 加入流程）**
+新 Agent 加入时按以下两步流程执行，全部通过 DB 持久化：
+
+**步骤一：HR 分配工号**
+HR 与新 Agent 对话确认信息后，运行：
+```
+npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_name":"...","dept_name":"...","assigned_by":"HR-001"}'
+```
+脚本自动生成工号（AGT-XXX/RAG-XXX 等），写入 `agents` 表，记录人事变动流水。
+HR 将新工号介绍给所属部门的组长。
+
+**步骤二：组长分配职责**
+组长运行：
+```
+npx tsx src/scripts/onboard-agent.ts --assign-duty '{"agent_id":"AGT-006","dept_name":"选股部门","role_title":"海龟通道策略官","responsibilities":"独立扫描市场，将唐奇安通道突破信号写入候选股池","assigned_by":"AGT-001"}'
+```
+只有该部门的组长才能分配职责，数据持久化到 `agent_duties` 表。
+
+HR 可使用 `--list` 随时查看组织架构全貌：
+```
+npx tsx src/scripts/onboard-agent.ts --list
+```
+
+**② 组织架构咨询（被动响应）**
 其他 Agent 如果不知道某个需求该找谁，可以问 HR 部门。
 HR 查阅知识库后，**优先返回该部门的组长**（如果是多人部门）：
 "帮我查 NVDA 报价" → "这是数据部门的事，找组长 data-agent"
 "对交易结果不满意需要申诉" → "找 election-committee，或审核部门组长 review-01"
 "有人事问题" → "我来查一下胜率排名，直接帮你处理"
 
-**② Agent 绩效审计（定期执行）**
+**③ Agent 绩效审计（定期执行）**
 ```
 npx tsx src/scripts/audit-cycle.ts
 ```
@@ -278,7 +301,7 @@ flowchart LR
     JUDGE -->|"表现优秀"| PRAISE[主动给正向反馈]
 ```
 
-**③ 人事变动管理**
+**④ 人事变动管理**
 所有人事变动由 Agent 通过自然语言通知，**不是代码自动执行**。
 人事变动需要对外通知时，找 advertising-agent 发飞书。
 
@@ -312,12 +335,15 @@ SQLite，文件 `data/trading.db`。
 
 ```mermaid
 erDiagram
+    departments ||--o{ agent_duties : "部门成员"
     agents ||--o{ agent_votes : "投票"
     agents ||--o{ win_reports : "胜负上报"
     agents ||--o{ agent_traits : "人格持久化"
     agents ||--o{ review_reports : "审核报告"
     agents ||--o{ agent_status_log : "人事变动"
     agents ||--o{ strategy_signatures : "策略签名"
+    agents ||--o{ agent_duties : "职责明细"
+    agents ||--o{ departments : "部门组长"
     trades ||--o{ agent_votes : "所属轮次"
     trades ||--o{ win_reports : "胜负"
     trades ||--o{ review_reports : "审核"
@@ -440,6 +466,8 @@ erDiagram
 | 10 | `review_reports` | 审核报告 | verdict, review_framework |
 | 11 | `daily_ledger` | 每日风控账簿 | trade_count, max_drawdown |
 | 12 | `(schema_migrations)` | 迁移记录 | — |
+| 13 | `departments` | 部门组织架构 | dept_id, dept_name, leader_agent_id |
+| 14 | `agent_duties` | 组员职责明细 | agent_id, dept_id, role_title, responsibilities |
 
 ---
 
@@ -557,6 +585,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `review-and-audit.ts` | — | 审核数据获取 | `--trade-id ID` | 交易详情 JSON |
 | `persona.ts` | — | 人格管理 | `--agent-id` | 人格数据 JSON |
 | `send-notify.ts` | 56 | 对外通知发送 | `--message TEXT` | 通知确认 JSON |
+| `onboard-agent.ts` | 400+ | 新 Agent 入职登记 | `--assign-id` / `--assign-duty` / `--list` | 工号/职责/组织架构 |
 
 总计：**所有脚本 ≈ 1000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
 

@@ -144,6 +144,28 @@ export interface StrategySignature {
   market_scope: string;
 }
 
+// ===== Onboarding Types =====
+
+export interface Department {
+  dept_id: string;           // "DPT-001"
+  dept_name: string;         // "选股部门"
+  dept_desc: string;         // 部门职责描述
+  leader_agent_id: string;   // 组长工号
+  created_at: string;
+  created_by: string;
+}
+
+export interface AgentDuty {
+  id?: number;
+  agent_id: string;
+  dept_id: string;
+  role_title: string;        // 岗位名称
+  responsibilities: string;  // 具体职责描述
+  assigned_by: string;       // 组长工号
+  assigned_at: string;
+  updated_at: string;
+}
+
 // ===== Protocol Types =====
 
 export interface VoteRequest {
