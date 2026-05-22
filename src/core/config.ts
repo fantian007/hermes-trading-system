@@ -5,6 +5,7 @@
  * 风控、选举、盯盘等参数均在此集中管理。
  */
 
+import 'dotenv/config';
 import type { AppConfig } from './types.js';
 
 /** 从环境变量解析数值，带默认值 */

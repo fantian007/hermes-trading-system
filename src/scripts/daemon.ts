@@ -5,11 +5,7 @@
  * 实际的信号检测、投票、审计由各 Agent 通过自然语言交互完成。
  *
  * 用法：
- *   npx tsx src/scripts/daemon.ts
- *
- * 调度计划：
- *   - 每 5 分钟：通知 selector Agent 检查市场
- *   - 每 30 分钟：通知 auditor Agent 执行审计
+ *   node --import tsx src/scripts/daemon.ts
  */
 
 import { spawn } from 'node:child_process';
@@ -29,21 +25,23 @@ let lastAudit = 0;
 
 /**
  * 异步执行一个脚本，返回 stdout 字符串。
- * 使用 spawn 而非 execSync，避免阻塞事件循环。
+ * 使用 node --import tsx 代替 npx tsx，避免 npm 解析开销。
  */
 function runScript(script: string, args: string[] = []): Promise<string> {
   return new Promise((resolvePromise) => {
-    const proc = spawn('npx', ['tsx', `src/scripts/${script}.ts`, ...args], {
+    const proc = spawn('node', ['--import', 'tsx', `src/scripts/${script}.ts`, ...args], {
       cwd: WORKDIR,
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 60_000,
     });
 
     let stdout = '';
+    let stderr = '';
     proc.stdout.on('data', (chunk: Buffer) => { stdout += chunk.toString(); });
+    proc.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
 
     proc.on('close', (code) => {
-      if (code !== 0) resolvePromise(`ERROR: exit code ${code}`);
+      if (code !== 0) resolvePromise(`ERROR: exit ${code}\n${stderr.slice(0, 500)}`);
       else resolvePromise(stdout.trim());
     });
 
@@ -55,30 +53,26 @@ function runScript(script: string, args: string[] = []): Promise<string> {
 
 function log(msg: string) {
   const ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  console.log(`[${ts}] ${msg}`);
+  process.stdout.write(`[${ts}] ${msg}\n`);
 }
 
 async function scanCycle() {
   lastScan = Date.now();
-  log('🔍 Scan cycle — selector agent does his own work');
-  // Agent-driven: notifies selector via advertising-agent, who then
-  // decides what to scan and how to analyze — no script decides for him.
-  await runScript('send-notify', ['--message', '🔍 选股扫描周期']);
+  log('🔍 Scan cycle — notifying selector agent');
+  const result = await runScript('send-notify', ['--message', '🔍 选股扫描周期']);
+  if (result) log(`   send-notify: ${result.slice(0, 200)}`);
 }
 
 async function auditCycle() {
   lastAudit = Date.now();
-  log('📊 Audit cycle — notifying auditor agent (via natural language)');
-  // Business logic removed: auditor Agent handles all audit tasks via NL.
-
-  // Notify via advertising department's tool
-  await runScript('send-notify', ['--message', '📊 审计周期启动']);
+  log('📊 Audit cycle — notifying auditor agent');
+  const result = await runScript('send-notify', ['--message', '📊 审计周期启动']);
+  if (result) log(`   send-notify: ${result.slice(0, 200)}`);
 }
 
 async function main() {
-  log('🚀 Hermes Trading Daemon + Advertising started — scheduling only, no business logic');
-  log(`   Scan interval: ${SCAN_INTERVAL_MS / 1000}s`);
-  log(`   Audit interval: ${AUDIT_INTERVAL_MS / 1000}s`);
+  log('🚀 Hermes Trading Daemon started');
+  log(`   Scan interval: ${SCAN_INTERVAL_MS / 1000}s | Audit interval: ${AUDIT_INTERVAL_MS / 1000}s`);
 
   // Run both cycles immediately on startup
   await scanCycle();
@@ -99,4 +93,4 @@ async function main() {
   process.on('SIGTERM', () => { log('Shutting down...'); process.exit(0); });
 }
 
-main().catch(console.error);
+main().catch((err) => { process.stderr.write(`Daemon fatal: ${err.message}\n`); process.exit(1); });

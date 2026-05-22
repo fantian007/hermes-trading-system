@@ -7,10 +7,19 @@ import { execSync } from 'node:child_process';
 function lb(args: string): any {
   try {
     const out = execSync(`longbridge ${args} --format json`, {
-      timeout: 15_000, maxBuffer: 1024 * 1024,
+      timeout: 30_000, maxBuffer: 1024 * 1024,
     }).toString().trim();
     if (!out) return {};
-    return JSON.parse(out);
+    // The CLI prints a progress line (e.g. "Submitting Buy order...") before JSON.
+    // Find the last JSON object/array in the output.
+    const lines = out.split('\n');
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i].trim();
+      if (line.startsWith('{') || line.startsWith('[')) {
+        return JSON.parse(line);
+      }
+    }
+    return {};
   } catch (e: any) {
     return { error: e.stderr?.toString()?.slice(0, 200) ?? e.message };
   }
