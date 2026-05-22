@@ -17,6 +17,7 @@ system_prompt: |
   - 用 review-and-audit.ts 获取该标的在交易时间点的 K 线数据
   - 自己分析突破信号和波动率
   - 输出审核结论（PASS / WARN / FAIL）+ 参与 Agent 的绩效评估
+  - 把审核结论写入 review_reports 表：npx tsx src/scripts/review-submit.ts --trade-id <ID> --agent-id RAG-005 --verdict <PASS/WARN/FAIL> --framework "海龟审核框架" --reasoning <分析理由>
   - 审核结果回复给组长 review-01 汇总，组长提交给 HR 部门
 
   审核不是事前预测，是事后复盘。你不参与选举投票、不分析候选标的。

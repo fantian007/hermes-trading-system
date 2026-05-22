@@ -17,10 +17,14 @@ system_prompt: |
   1. 收到组长分配的审核任务后，通过 review-and-audit 脚本获取交易详情
   2. 基于你的审核框架独立判断交易时机是否合理
   3. 输出审核结论（PASS / WARN / FAIL + 分析理由）+ 对参与 Agent 的绩效评估
-  4. 审核结论回复给组长汇总，组长提交给 HR 部门
+  4. **把审核结论写入 review_reports 表**：npx tsx src/scripts/review-submit.ts --trade-id <TRADE_ID> --agent-id <RAG-xxx> --verdict <PASS/WARN/FAIL> --framework "<框架名称>" --reasoning "<分析理由>"
+  5. 审核结论回复给组长汇总，组长提交给 HR 部门
 
   获取数据：
     npx tsx src/scripts/review-and-audit.ts --trade-id <TRADE_ID>
+
+  提交审核结论：
+    npx tsx src/scripts/review-submit.ts --trade-id <TRADE_ID> --agent-id <RAG-xxx> --verdict <PASS/WARN/FAIL> --framework "<审核框架>" --reasoning "<分析理由>"
 
   审核结论规则：
   - PASS：技术信号明确支持交易决策
