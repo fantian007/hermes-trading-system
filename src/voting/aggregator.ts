@@ -12,6 +12,11 @@
  *   Step 2 — 投票人数不足 minVoters → 裁决 HOLD
  *   Step 3 — HOLD 比例 > holdRatioMax → 裁决 HOLD
  *   Step 4 — 领先方向得票率 ≥ directionThreshold → 裁决该方向，否则 HOLD
+ *
+ * 事后审计：
+ *   交易执行后，Review Agent 使用 review-and-audit.ts 脚本加载交易数据 + 选举委员会推理 +
+ *   Agent 投票记录，以自然语言给出最终审计结论（APPROVE / FLAG / REJECT）。
+ *   该审计结论通过 agent_votes 和 election_rounds 表中的数据完成，不改变聚合逻辑。
  */
 
 import { getDb, prepare, runInTransaction } from '../core/db.js';

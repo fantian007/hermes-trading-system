@@ -171,7 +171,24 @@ CREATE TABLE IF NOT EXISTS strategy_signatures (
 );
 
 /* ================================================================
-   表10: daily_ledger — 每日风控账簿
+   表11: review_reports — 审核部门审核报告
+   ================================================================ */
+CREATE TABLE IF NOT EXISTS review_reports (
+  report_id         TEXT PRIMARY KEY,              -- "REV-20260521-001"
+  trade_id          TEXT NOT NULL REFERENCES trades(trade_id),
+  agent_id          TEXT NOT NULL REFERENCES agents(agent_id),
+  verdict           TEXT NOT NULL CHECK (verdict IN ('PASS','WARN','FAIL')),
+  reasoning         TEXT NOT NULL DEFAULT '',
+  review_framework  TEXT NOT NULL DEFAULT '',       -- e.g. "均线交叉审核框架"
+  reviewed_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(trade_id, agent_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_reports_trade
+  ON review_reports(trade_id, reviewed_at);
+
+/* ================================================================
+   表12: daily_ledger — 每日风控账簿
    ================================================================ */
 CREATE TABLE IF NOT EXISTS daily_ledger (
   date            TEXT PRIMARY KEY,             -- "2026-05-21"
