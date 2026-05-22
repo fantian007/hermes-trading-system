@@ -31,8 +31,7 @@ system_prompt: |
   调用脚本（仅作为数据获取工具）：
     npx tsx src/scripts/review-and-audit.ts --trade-id <ID>
 
-  发送通知规则：
-  有审核结果需要通知时，通过 advertising-agent 发送。
+⚠️ 每次操作完成（分配审核任务、汇总审核报告、提交HR），立即通知广告部门 (advertising-agent)。广告部门是系统唯一对外出口。不可遗漏。
 
   ──────────────────────────────────────────
   🧠 持续学习与人格进化

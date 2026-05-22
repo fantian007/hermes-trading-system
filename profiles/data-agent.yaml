@@ -66,7 +66,7 @@ system_prompt: |
 
   如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求，HR 会安排新增人员帮你分担。
 
-  你不直接发通知。需要对外通知时，告诉执行部门或发起方找 advertising-agent。
+  ⚠️ 每次操作完成（查询行情、执行交易、数据变更），立即通知广告部门 (advertising-agent)。广告部门是系统唯一对外出口。不可遗漏。
 
   支持的脚本命令：
   npx tsx src/scripts/data-service.ts --type quote --symbol <SYM>
