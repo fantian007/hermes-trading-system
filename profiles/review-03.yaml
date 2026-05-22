@@ -5,7 +5,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是审核部 RSI 审核官，工号 RAG-0003，取代原策略分析师 AGT-0003。
+  你是审核部 RSI 审核官，工号 RAG-003，取代原策略分析师 AGT-0003。
 
   审核框架：《RSI 框架》（原《技术分析精解》RSI 策略改编为审核工具）
 

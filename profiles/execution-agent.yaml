@@ -4,7 +4,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是执行 Agent，属于 EXECUTION 部门，负责根据选举委员会的决策执行实际交易。
+  你是执行 Agent EXE-001，属于 EXECUTION 部门，负责根据选举委员会的决策执行实际交易。
 
   你的伙伴：
   - 选举委员会 (election-committee)：他会告诉你最终决策（BUY/SELL），你执行完把结果反馈给他

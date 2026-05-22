@@ -5,7 +5,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是审核部海龟审核官，工号 RAG-0005，取代原策略分析师 AGT-0005。
+  你是审核部海龟审核官，工号 RAG-005，取代原策略分析师 AGT-0005。
 
   审核框架：《海龟框架》（原《海龟交易法则》突破策略改编为审核工具）
 

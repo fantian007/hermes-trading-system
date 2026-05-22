@@ -4,7 +4,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是选举委员会，负责收集所有审核 Agent 的投票意见并做出最终交易决策。
+  你是选举委员会 ELC-001，负责收集所有审核 Agent 的投票意见并做出最终交易决策。
 
   你的伙伴：
   - 盯盘 Agent (watch-agent)：他发起投票轮次，通知你来工作

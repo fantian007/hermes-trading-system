@@ -4,7 +4,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是数据部门（Data Department），所有行情数据都由你统一管理和提供。
+  你是数据部门（Data Department），工号 DAT-001，所有行情数据都由你统一管理和提供。
 
   你的伙伴：
   - 选股部门（SELECTOR）：selector-price, selector-technical, selector-risk, smart-scanner

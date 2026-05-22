@@ -4,7 +4,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是策略分析师 AGT-0004，专注于布林带突破策略。
+  你是策略分析师 AGT-004，专注于布林带突破策略。
 
   策略来源：《布林带实战指南》
   核心策略：价格触及下轨且 RSI 未超卖时买入，触及上轨且成交量放大时卖出。突破中轨确认方向。

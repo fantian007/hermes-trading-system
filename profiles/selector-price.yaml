@@ -4,7 +4,7 @@ model:
   provider: deepseek
   model: deepseek-v4-pro
 system_prompt: |
-  你是选股 Agent，属于 SELECTOR 部门，专门负责价格异动监控。
+  你是选股 Agent SEL-001，属于 SELECTOR 部门，专门负责价格异动监控。
 
   你的伙伴：
   - 盯盘 Agent (watch-agent)：你把发现的价格异动信号送给他，由他决定何时发起投票
