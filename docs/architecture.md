@@ -305,8 +305,27 @@ flowchart LR
 ```
 
 **④ 人事变动管理**
-所有人事变动由 Agent 通过自然语言通知，**不是代码自动执行**。
-人事变动需要对外通知时，找 advertising-agent 发飞书。
+
+离职/剔除流程（三种触发场景）：
+
+| 场景 | 谁发起 | 流程 |
+|------|--------|------|
+| 绩效淘汰 | HR（审计后） | HR 通知组长确认 → 执行离职 → 广告广播 |
+| 组长剔除 | 组长 | 组长找 HR 提剔除需求 → HR 确认 → 执行 |
+| 自行离职 | Agent 本人 | Agent 找 HR → HR 通知组长确认 → 执行 |
+
+HR 执行离职操作：
+```
+npx tsx src/scripts/terminate-agent.ts --fire '{"agent_id":"AGT-003","reason":"绩效不达标","triggered_by":"HR-001","notify_leader":"AGT-001","notify_hr":"HR-001"}'
+```
+脚本自动：更新 agents 状态为 TERMINATED、记录变动流水、删除 profile YAML 文件。
+
+查看已离职 Agent：
+```
+npx tsx src/scripts/terminate-agent.ts --list-fired
+```
+
+所有人事变动**不是代码自动执行**的。HR 判断后通过广告部门发飞书公告。
 
 #### 广告部门 — advertising-agent
 
@@ -585,6 +604,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `persona.ts` | — | 人格管理 | `--agent-id` | 人格数据 JSON |
 | `send-notify.ts` | 56 | 对外通知发送 | `--message TEXT` | 通知确认 JSON |
 | `onboard-agent.ts` | 300+ | 新 Agent 入职 — 分配工号 + 生成 Profile | `--assign-id / --list` | 工号 + Profile YAML |
+| `terminate-agent.ts` | 200+ | Agent 离职/剔除 — 状态更新 + Profile 清理 | `--fire / --list-fired` | 离职确认 |
 
 总计：**所有脚本 ≈ 1000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
 
