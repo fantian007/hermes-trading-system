@@ -256,22 +256,22 @@ HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent
 HR 部门的三项核心事务：
 
 **① 入职管理（新 Agent 加入流程）**
-新 Agent 加入时按以下两步流程执行，全部通过 DB 持久化：
+新 Agent 加入时按以下流程执行，全部通过 DB + Profile 文件持久化：
 
-**步骤一：HR 分配工号**
+**HR 分配工号并生成 Profile**
 HR 与新 Agent 对话确认信息后，运行：
 ```
-npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_name":"...","dept_name":"...","assigned_by":"HR-001"}'
+npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_name":"...","dept_name":"...","role_title":"...","responsibilities":"...","assigned_by":"HR-001"}'
 ```
-脚本自动生成工号（AGT-XXX/RAG-XXX 等），写入 `agents` 表，记录人事变动流水。
-HR 将新工号介绍给所属部门的组长。
+脚本自动完成三件事：
+- 生成工号（AGT-005），写入 `agents` 表
+- 记录人事变动流水到 `agent_status_log`
+- **自动生成 Profile YAML 文件**到 `profiles/` 目录（含岗位、职责、组长信息）
 
-**步骤二：组长分配职责**
-组长运行：
-```
-npx tsx src/scripts/onboard-agent.ts --assign-duty '{"agent_id":"AGT-006","dept_name":"选股部门","role_title":"海龟通道策略官","responsibilities":"独立扫描市场，将唐奇安通道突破信号写入候选股池","assigned_by":"AGT-001"}'
-```
-只有该部门的组长才能分配职责，数据持久化到 `agent_duties` 表。
+HR 将新工号和 Profile 文件介绍给组长，组长直接编辑该 YAML 文件完善 system_prompt。
+
+**职责写在 Profile 里，不是 DB 里**
+Agent 的岗位和职责不存储在 DB 中——它们通过 `system_prompt` 写入 Profile YAML 文件。每个 Agent 启动时从自己的 Profile 读取身份信息。
 
 HR 可使用 `--list` 随时查看组织架构全貌：
 ```
@@ -335,15 +335,12 @@ SQLite，文件 `data/trading.db`。
 
 ```mermaid
 erDiagram
-    departments ||--o{ agent_duties : "部门成员"
     agents ||--o{ agent_votes : "投票"
     agents ||--o{ win_reports : "胜负上报"
     agents ||--o{ agent_traits : "人格持久化"
     agents ||--o{ review_reports : "审核报告"
     agents ||--o{ agent_status_log : "人事变动"
     agents ||--o{ strategy_signatures : "策略签名"
-    agents ||--o{ agent_duties : "职责明细"
-    agents ||--o{ departments : "部门组长"
     trades ||--o{ agent_votes : "所属轮次"
     trades ||--o{ win_reports : "胜负"
     trades ||--o{ review_reports : "审核"
@@ -467,7 +464,6 @@ erDiagram
 | 11 | `daily_ledger` | 每日风控账簿 | trade_count, max_drawdown |
 | 12 | `(schema_migrations)` | 迁移记录 | — |
 | 13 | `departments` | 部门组织架构 | dept_id, dept_name, leader_agent_id |
-| 14 | `agent_duties` | 组员职责明细 | agent_id, dept_id, role_title, responsibilities |
 
 ---
 
@@ -585,7 +581,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `review-and-audit.ts` | — | 审核数据获取 | `--trade-id ID` | 交易详情 JSON |
 | `persona.ts` | — | 人格管理 | `--agent-id` | 人格数据 JSON |
 | `send-notify.ts` | 56 | 对外通知发送 | `--message TEXT` | 通知确认 JSON |
-| `onboard-agent.ts` | 400+ | 新 Agent 入职登记 | `--assign-id` / `--assign-duty` / `--list` | 工号/职责/组织架构 |
+| `onboard-agent.ts` | 300+ | 新 Agent 入职 — 分配工号 + 生成 Profile | `--assign-id / --list` | 工号 + Profile YAML |
 
 总计：**所有脚本 ≈ 1000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
 

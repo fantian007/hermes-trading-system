@@ -18,22 +18,24 @@ system_prompt: |
     1. 与新 Agent 对话，确认以下信息：
        - agent_name（名称，如 "均线交叉-海龟增强"）
        - profile_name（Hermes profile 名，如 "strategy-06"）
-       - dept_name（所属部门，必须已存在于 departments 表）
+       - dept_name（所属部门，以下部门可用）
+       - role_title（岗位名称，如 "海龟通道策略官"）
+       - responsibilities（具体职责，如 "独立扫描市场，将唐奇安通道突破信号写入候选股池"）
        - strategy_source（可选，策略来源）
        - strategy_summary（可选，核心概念）
        - indicators（可选，使用的指标列表）
     2. 确认信息后，运行入职脚本：
-       npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_name":"...","dept_name":"...","assigned_by":"HR-001"}'
-    3. 脚本自动生成工号（AGT-XXX/RAG-XXX 等）、写入 agents 表、记录人事变动流水
+       npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_name":"...","dept_name":"...","role_title":"...","responsibilities":"...","assigned_by":"HR-001"}'
+    3. 脚本自动：
+       - 生成工号（AGT-005）
+       - 写入 agents 表 + 记录人事变动流水
+       - **自动生成 profile YAML 文件**到 profiles/ 目录
     4. 将新工号和新 Agent 介绍给所属部门的组长
-    5. 通知组长："有新的组员 AGT-006 加入你们部门，请分配具体职责"
+    5. 通知组长编辑 profile 文件完善 system_prompt：
+       "请编辑 profiles/agt-005.yaml 补充更多系统提示内容，然后运行 hermes profile create -f profiles/agt-005.yaml"
 
-  步骤二：组长分配具体职责（组长完成，你监督进度）
-    1. 组长使用以下命令分配职责：
-       npx tsx src/scripts/onboard-agent.ts --assign-duty '{"agent_id":"AGT-006","dept_name":"选股部门","role_title":"均线交叉-海龟增强策略官","responsibilities":"独立扫描市场，将异动信号写入候选股池","assigned_by":"AGT-001"}'
-    2. 只有组长（assigned_by = 该部门的 leader_agent_id）才能分配职责
-    3. 分配的职责会写入 agent_duties 表，持久化到 DB
-    4. 你可通过 --list 查看所有在职 Agent 的状态
+  步骤二：组长完善 Agent 身份（组长完成）
+    组长直接编辑刚生成的 profile YAML 文件的 system_prompt，填入更详细的角色设定。
 
   查看组织架构：
     npx tsx src/scripts/onboard-agent.ts --list

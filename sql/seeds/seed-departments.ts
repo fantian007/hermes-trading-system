@@ -3,10 +3,11 @@
  *
  * 用法: npx tsx sql/seeds/seed-departments.ts
  *
- * 先写 agents（清旧数据），再写 departments，再写 agent_duties。
+ * 先写 agents（清旧数据），再写 departments。
+ * profiles 文件需要提前存在，职责写在 YAML 的 system_prompt 里。
  */
 import { getDb, execSql, closeDb } from '../../src/core/db.js';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,7 +20,6 @@ try {
 
   // 2) 清空旧数据（需先关外键检查）
   execSql('PRAGMA foreign_keys = OFF');
-  execSql('DELETE FROM agent_duties');
   execSql('DELETE FROM departments');
   execSql('DELETE FROM review_reports');
   execSql('DELETE FROM win_reports');
@@ -70,26 +70,20 @@ try {
   `);
   console.log('[seed] 8 departments seeded');
 
-  // 5) Agent duties
-  execSql(`
-    INSERT INTO agent_duties (agent_id, dept_id, role_title, responsibilities, assigned_by) VALUES
-      ('DAT-001', 'DPT-001', '数据管家', '统一行情接口，被动响应数据请求', 'DAT-001'),
-      ('AGT-001', 'DPT-002', '均线交叉策略官(组长)', '管理选股部门，汇总信号后提交', 'AGT-001'),
-      ('AGT-002', 'DPT-002', 'MACD策略官', '将MACD异动信号写入候选股池', 'AGT-001'),
-      ('AGT-003', 'DPT-002', 'RSI策略官', '将RSI异动信号写入候选股池', 'AGT-001'),
-      ('AGT-004', 'DPT-002', '布林带策略官', '将布林带异动信号写入候选股池', 'AGT-001'),
-      ('WAT-001', 'DPT-003', '巡逻兵', '持续扫描候选股池，判断投票时机', 'WAT-001'),
-      ('ELC-001', 'DPT-004', '投资总监', '收集审核官意见后拍板决策', 'ELC-001'),
-      ('RAG-001', 'DPT-005', '均线交叉审核官(组长)', '管理审核部门，汇总审核报告', 'RAG-001'),
-      ('RAG-002', 'DPT-005', 'MACD审核官', '基于MACD框架审核决策质量', 'RAG-001'),
-      ('RAG-003', 'DPT-005', 'RSI审核官', '基于RSI框架审核决策质量', 'RAG-001'),
-      ('RAG-004', 'DPT-005', '布林带审核官', '基于布林带框架审核决策质量', 'RAG-001'),
-      ('RAG-005', 'DPT-005', '海龟交易审核官', '基于唐奇安通道审核决策质量', 'RAG-001'),
-      ('EXE-001', 'DPT-006', '交易操作员', '执行下单指令，风控持仓监控', 'EXE-001'),
-      ('HR-001', 'DPT-007', '人事总监', '组织发展、绩效审计', 'HR-001'),
-      ('ADV-001', 'DPT-008', '传声筒', '对外通知发送', 'ADV-001');
-  `);
-  console.log('[seed] Agent duties seeded');
+  // 5) 验证 - profiles 必须已有对应文件
+  const profileFiles = ['data-agent', 'strategy-01', 'strategy-02', 'strategy-03', 'strategy-04',
+    'watch-agent', 'election-committee', 'review-01', 'review-02', 'review-03', 'review-04', 'review-05',
+    'execution-agent', 'hr-agent', 'advertising-agent'];
+  let missing = 0;
+  for (const pf of profileFiles) {
+    const path = resolve(__dirname, `../../profiles/${pf}.yaml`);
+    if (!existsSync(path)) {
+      console.warn(`  ⚠️ 缺少 profile: ${pf}.yaml`);
+      missing++;
+    }
+  }
+  if (missing === 0) console.log('[seed] All 15 profile files present');
+  else console.warn(`[seed] ${missing} profile(s) missing — 请创建后再注册`);
 
   // 6) 验证
   const db = getDb();

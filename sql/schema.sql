@@ -200,24 +200,6 @@ CREATE TABLE IF NOT EXISTS departments (
 );
 
 /* ================================================================
-   表14: agent_duties — 组员职责明细（组长填写）
-   ================================================================ */
-CREATE TABLE IF NOT EXISTS agent_duties (
-  id                INTEGER PRIMARY KEY AUTOINCREMENT,
-  agent_id          TEXT NOT NULL REFERENCES agents(agent_id),
-  dept_id           TEXT NOT NULL REFERENCES departments(dept_id),
-  role_title        TEXT NOT NULL DEFAULT '',       -- 岗位名称 "均线交叉策略官"
-  responsibilities TEXT NOT NULL DEFAULT '',        -- 具体职责描述
-  assigned_by       TEXT NOT NULL,                  -- 组长工号
-  assigned_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at        TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE(agent_id, dept_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_duties_dept ON agent_duties(dept_id);
-CREATE INDEX IF NOT EXISTS idx_duties_agent ON agent_duties(agent_id);
-
-/* ================================================================
    表12: daily_ledger — 每日风控账簿
    ================================================================ */
 CREATE TABLE IF NOT EXISTS daily_ledger (

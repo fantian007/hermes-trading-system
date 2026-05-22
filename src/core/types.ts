@@ -155,17 +155,6 @@ export interface Department {
   created_by: string;
 }
 
-export interface AgentDuty {
-  id?: number;
-  agent_id: string;
-  dept_id: string;
-  role_title: string;        // 岗位名称
-  responsibilities: string;  // 具体职责描述
-  assigned_by: string;       // 组长工号
-  assigned_at: string;
-  updated_at: string;
-}
-
 // ===== Protocol Types =====
 
 export interface VoteRequest {
