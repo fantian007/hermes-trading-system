@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 /**
- * 飞书卡片消息发送 — 广告部门专用
+ * 飞书卡片消息发送 — 纯工具，零决策
+ * 广告部 agent 自己决定标题/颜色/排版，此脚本只负责发送。
  *
  * 用法：
- *   npx tsx src/scripts/send-card.ts \
- *     --title "交易执行" --source "📊 策略部门 AGT-002" --color green \
- *     --body "**NVDA.US** 买入 10股\n\n成交价 $216.44 | 金额 $2,164"
+ *   echo "markdown内容" | npx tsx src/scripts/send-card.ts --title "标题" --source "部门" --color blue
  */
-
 import { sendCard, type CardConfig } from '../notify/card.js';
 
 function parseArgs() {
@@ -20,26 +18,32 @@ function parseArgs() {
     title: get('title'),
     source: get('source'),
     color: get('color') || 'blue',
-    body: get('body'),
   };
 }
 
 async function main() {
-  const { title, source, color, body } = parseArgs();
+  const { title, source, color } = parseArgs();
+
+  // Read body from stdin — agent writes markdown via pipe/heredoc
+  let body = '';
+  if (!process.stdin.isTTY) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) {
+      chunks.push(chunk as Buffer);
+    }
+    body = Buffer.concat(chunks).toString().trim();
+  }
 
   if (!body) {
-    console.error('Usage: send-card.ts --title <TITLE> --source <DEPT> --color <COLOR> --body <MARKDOWN>');
+    console.error('Usage: echo "body" | send-card.ts --title <TITLE> --source <DEPT> --color <COLOR>');
     process.exit(1);
   }
 
-  const headerTitle = title || '通知';
-  const headerSubtitle = source || '';
-
   const cfg: CardConfig = {
     header: {
-      title: headerTitle,
-      subtitle: headerSubtitle,
-      template: (color || 'blue') as any,
+      title: title || '通知',
+      subtitle: source || '',
+      template: color,
     },
     sections: [{ text: body }],
   };
