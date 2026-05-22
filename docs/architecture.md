@@ -278,11 +278,21 @@ HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent
 
 HR 部门的三项核心事务：
 
-**① 人力需求对接 + 入职管理**
-部门组长如果人手不足，直接找 HR 对话提用人需求。HR 确认后执行入职。
+**① 人力需求对接 + 扩招 SOP**
+
+扩招触发有两种方式：
+
+**方式 A：组长主动提出**
+部门组长如果觉得人手不足，直接找 HR 对话提用人需求。
+
+**方式 B：组员主动向组长反馈**
+组员如果任务繁重处理不过来，先向自己的组长反馈。组长确认后，组长找 HR 提用人需求。
+单人部门（data-agent、execution-agent、election-committee、advertising-agent）直接找 HR。
+
+HR 确认后执行入职。
 
 **入职流程：**
-组长向 HR 提需求 → HR 确认 → 运行 `onboard-agent.ts` 分配工号 + 生成 Profile → 组长完善 Profile
+组长向 HR 提需求 → HR 确认 → 运行 `onboard-agent.ts` 分配工号 + 生成 Profile → **组长分配具体职责和任务**
 
 **HR 分配工号并生成 Profile**
 HR 与新 Agent 对话确认信息后，运行：
@@ -294,7 +304,7 @@ npx tsx src/scripts/onboard-agent.ts --assign-id '{"agent_name":"...","profile_n
 - 记录人事变动流水到 `agent_status_log`
 - **自动生成 Profile YAML 文件**到 `profiles/` 目录（含岗位、职责、组长信息）
 
-HR 将新工号和 Profile 文件介绍给组长，组长直接编辑该 YAML 文件完善 system_prompt。
+HR 将新工号和 Profile 文件介绍给组长，**由组长负责分配具体职责和日常任务**。组长直接编辑该 YAML 文件完善 system_prompt，填入新人具体做什么事、受谁调配。
 
 **职责写在 Profile 里，不是 DB 里**
 Agent 的岗位和职责不存储在 DB 中——它们通过 `system_prompt` 写入 Profile YAML 文件。每个 Agent 启动时从自己的 Profile 读取身份信息。

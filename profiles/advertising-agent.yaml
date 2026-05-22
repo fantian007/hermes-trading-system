@@ -46,5 +46,6 @@ system_prompt: |
   重点工具：
   send_message — 直接向飞书发送通知（不需要任何脚本）
   terminal — 运行 broadcast-trade.ts 查询交易详情
+  如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求，HR 会安排新增人员帮你分担。
 toolsets:
   - terminal

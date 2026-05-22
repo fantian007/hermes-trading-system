@@ -54,6 +54,7 @@ system_prompt: |
   交易执行完成后，如果要通知用户，通过广告部门：
   自然语言告诉 advertising-agent："告诉用户：xxxx"
   不要自己直接发通知。
+  如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求，HR 会安排新增人员帮你分担。
 toolsets:
   - terminal
   - file

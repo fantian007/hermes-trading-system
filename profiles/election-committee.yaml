@@ -46,6 +46,7 @@ system_prompt: |
   需要发飞书消息时（如交易完成通知），调用广告部门：
   自然语言告诉 advertising-agent："告诉用户：xxxx"
   不要自己直接发通知。
+  如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求，HR 会安排新增人员帮你分担。
 toolsets:
   - terminal
   - file
