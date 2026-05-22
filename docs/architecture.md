@@ -59,10 +59,18 @@ graph TB
         REVIEW -->|"事后审核<br/>PASS/WARN/FAIL"| REPORTS[(审核报告<br/>review_reports)]
     end
 
+    subgraph "广告部门"
+        AD[广告部门<br/>advertising-agent] -.->|"对外通知"| FEISHU[(飞书消息)]
+    end
+
     subgraph "数据基础"
         DATA[数据部门<br/>data-agent] -.->|"统一行情接口"| ALL[所有部门]
     end
 
+    AD -.-> ALL
+    ALL -.-> AD
+
+    style AD fill:#f57f17,color:#fff
     style DATA fill:#1a237e,color:#fff
     style SELECTOR fill:#004d40,color:#fff
     style WATCH fill:#e65100,color:#fff
@@ -81,6 +89,7 @@ graph TB
 执行部门 ──跑 execute-decision──→ 下单 ──检查持仓→ 通知选举委员会
 审计+HR ──跑 audit-cycle──→ 排名 JSON ──自己判断→ 淘汰/复活
 审核官 ──跑 review-and-audit──→ 交易详情 ──自己审核→ PASS/WARN/FAIL
+任何部门 ──自然语言告知──→ 广告部门 ──运行 send-notify.ts──→ 飞书消息
 ```
 
 ---
@@ -98,6 +107,7 @@ graph TB
 | 5 | **审核部门** | `review-01~05` | RAG-0001~0005 | 5 | 事后诸葛亮 | 风控审计 |
 | 6 | **执行部门** | `execution-agent` | — | 1 | 实干派，下单就走 | 交易操作员 |
 | 7 | **审计+HR** | `auditor-agent` | — | 1 | 纪律委员 | 人力资源 |
+| 8 | **广告部门** | `advertising-agent` | — | 1 | 传声筒，有求必应 | 公关/客服 |
 
 ### 3.2 各部门详细职责
 
@@ -226,6 +236,26 @@ flowchart LR
 ```
 
 所有人事变动由 Agent 通过自然语言通知，**不是代码自动执行**。
+
+#### 广告部门 — advertising-agent
+
+```
+角色定位：系统唯一的对外通知出口
+工作方式：被动响应，其他部门通过自然语言请求发送通知
+```
+
+| 请求类型 | 实际命令 |
+|---------|---------|
+| "告诉用户：NVDA 交易完成，盈利 $350" | `npx tsx src/scripts/send-notify.ts --message "NVDA 交易完成，盈利 $350"` |
+| "广播一下：RAG-0003 进入影子期" | `npx tsx src/scripts/send-notify.ts --message "RAG-0003 进入影子期"` |
+| "发紧急通知：日回撤 8.5% 熔断" | `npx tsx src/scripts/send-notify.ts --message "🚨 熔断触发：日回撤 8.5%"` |
+| "帮我查 TRD-001 的交易广播" | `npx tsx src/scripts/broadcast-trade.ts --trade-id TRD-001` |
+
+重要规则：
+1. **只有广告部门才能对外发通知**——其他部门不能直接调用飞书 API
+2. 消息内容由发送方提供，广告部门只做原文传递
+3. 发送后回复对方"已发送"
+4. 如果对方需要先查数据（如交易广播），可以先用 broadcast-trade.ts 查，确认后再发
 
 ---
 
@@ -476,11 +506,12 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `aggregate-votes.ts` | 110 | 加权投票统计 | `--round-id ID` | 加权票数 JSON |
 | `execute-decision.ts` | 99 | 纯下单 | `--action BUY --symbol X --qty N` | 交易结果 JSON |
 | `audit-cycle.ts` | 50 | 胜率排名统计 | 无参 | 排名 JSON |
-| `broadcast-trade.ts` | 64 | 读取交易详情 | `--trade-id ID` | 交易广播 JSON |
+| `broadcast-trade.ts` | 64 | 交易详情广播 | `--trade-id ID` | 交易广播 JSON |
 | `selector-price.ts` | 99 | 信号提交 | `--symbol --price --change` | 信号确认 JSON |
 | `report-win.ts` | — | 胜负上报 | `--trade-id --result` | 更新确认 |
 | `review-and-audit.ts` | — | 审核数据获取 | `--trade-id ID` | 交易详情 JSON |
 | `persona.ts` | — | 人格管理 | `--agent-id` | 人格数据 JSON |
+| `send-notify.ts` | 56 | 对外通知发送 | `--message TEXT` | 通知确认 JSON |
 
 总计：**所有脚本 ≈ 1000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
 
@@ -669,6 +700,7 @@ npm test
 - [x] 审计 + HR 人事管理
 - [x] 交易后审核报告
 - [x] 回测框架
+- [x] 广告部门作为统一对外通知出口
 
 ---
 

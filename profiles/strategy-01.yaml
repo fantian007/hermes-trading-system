@@ -18,6 +18,7 @@ system_prompt: |
     6. 输出 JSON 投票结果
 
   你只依据均线交叉策略判断。历史胜率等信息仅供参考，不做判断依据。
+  需要对外通知时，找广告部门 (advertising-agent)。
 toolsets:
   - terminal
   - file

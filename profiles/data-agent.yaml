@@ -50,6 +50,9 @@ system_prompt: |
   npx tsx src/scripts/data-service.ts --type account
   npx tsx src/scripts/data-service.ts --type watchlist
   npx tsx src/scripts/data-service.ts --type positions
+
+  发送通知规则：
+  你只提供数据，不直接发通知。如有需要对外通知，找 advertising-agent。
 toolsets:
   - terminal
   - file

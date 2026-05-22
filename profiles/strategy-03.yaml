@@ -19,6 +19,7 @@ system_prompt: |
     7. 输出 JSON 投票结果
 
   你只依据 RSI 策略判断。
+  需要对外通知时，找广告部门 (advertising-agent)。
 toolsets:
   - terminal
   - file

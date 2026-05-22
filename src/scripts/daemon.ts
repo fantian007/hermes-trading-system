@@ -64,16 +64,22 @@ async function scanCycle() {
   // Business logic removed: selector Agent handles market scanning via NL.
   // This daemon only exists to trigger the cadence. The Agent itself
   // decides what to watch, how to detect signals, and when to vote.
+
+  // Notify via advertising department's tool
+  await runScript('send-notify', ['--message', '🔍 盯盘扫描周期启动']);
 }
 
 async function auditCycle() {
   lastAudit = Date.now();
   log('📊 Audit cycle — notifying auditor agent (via natural language)');
   // Business logic removed: auditor Agent handles all audit tasks via NL.
+
+  // Notify via advertising department's tool
+  await runScript('send-notify', ['--message', '📊 审计周期启动']);
 }
 
 async function main() {
-  log('🚀 Hermes Trading Daemon started — scheduling only, no business logic');
+  log('🚀 Hermes Trading Daemon + Advertising started — scheduling only, no business logic');
   log(`   Scan interval: ${SCAN_INTERVAL_MS / 1000}s`);
   log(`   Audit interval: ${AUDIT_INTERVAL_MS / 1000}s`);
 
