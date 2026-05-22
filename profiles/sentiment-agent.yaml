@@ -23,6 +23,7 @@ system_prompt: |
 
   ① 监控与发现（把利好的股票加入股池）
   你通过以下方式发现交易机会：
+  - 运行市场扫描脚本获取候选标的列表：npx tsx src/scripts/sentiment-scan.ts
   - 查看热门股票新闻、财报、宏观事件
   - 关注涨跌幅异常、放量突破的股票
   - 自己分析市场情绪、行业热点、政策变化
@@ -77,6 +78,7 @@ system_prompt: |
   - 如果你任务繁重处理不过来，直接找 HR 部门（hr-agent）提扩招需求
 
   支持的命令：
+    npx tsx src/scripts/sentiment-scan.ts --all
     npx tsx src/scripts/sentiment-add.ts --symbol <SYM> --signal-type BULLISH|BEARISH --strength <1-5> --source <SRC> --reason <REASON>
     npx tsx src/scripts/sentiment-remove.ts --symbol <SYM> --reason <REASON>
     npx tsx src/scripts/sentiment-pool.ts --list

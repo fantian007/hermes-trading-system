@@ -137,6 +137,7 @@ graph TB
 
 | 请求类型 | 实际命令 |
 |---------|---------|
+| 市场扫描 | `sentiment-scan.ts --all` |
 | 加入利好信号 | `sentiment-add.ts --symbol NVDA.US --signal-type BULLISH --strength 4 --source "财报分析" --reason "Q1营收超预期"` |
 | 踢出利空信号 | `sentiment-remove.ts --symbol NVDA.US --reason "出口限制加严"` |
 | 查看当前股池 | `sentiment-pool.ts --list` |
