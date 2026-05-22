@@ -1,14 +1,14 @@
 /**
  * 交易事后审计数据提供者
  *
- * 职责：
+ * 职责（仅此一项）：
  *   加载交易详情 + 选举委员会推理过程 + Agent 投票数据，
  *   输出 JSON 上下文供 Review Agent 做自然语言审计。
  *
+ * 不输出任何 verdict 模板——Agent 自己决定怎么审核。
+ *
  * 用法：
  *   npx tsx src/scripts/review-and-audit.ts --trade-id TRD-20260521-001
- *
- * Agent 读取 stdout JSON，基于数据给出审计结论（自然语言）。
  */
 
 import { getDb } from '../core/db.js';
@@ -40,7 +40,7 @@ async function main() {
     process.exit(1);
   }
 
-  // 2. 加载关联的选举轮次（交易是通过哪个轮次批准的）
+  // 2. 加载关联的选举轮次
   const round = db.prepare('SELECT * FROM election_rounds WHERE round_id = ?').get(trade.approved_by) as any;
 
   // 3. 加载该轮次的所有 Agent 投票
@@ -48,7 +48,7 @@ async function main() {
     'SELECT * FROM agent_votes WHERE trade_id = ? OR round_id = ? ORDER BY voted_at'
   ).all(tradeId, trade.approved_by) as any[];
 
-  // 4. 输出审计上下文
+  // 4. 输出原始数据——Agent 自己判断
   const context = {
     trade: {
       trade_id: trade.trade_id,
@@ -87,17 +87,7 @@ async function main() {
       voted_at: v.voted_at,
       is_shadow: !!v.is_shadow,
     })),
-    instruction: `
-Review the above trade data, election committee reasoning, and agent votes.
-Output your audit verdict in the following JSON format:
-
-{
-  "trade_id": "${tradeId}",
-  "verdict": "APPROVE" | "FLAG" | "REJECT",
-  "reasoning": "Your audit analysis (1-3 sentences)",
-  "suggestions": ["optional suggestion 1", "optional suggestion 2"]
-}
-`,
+    // 不再包含 instruction 模板——Agent 自己审核、自己决定 verdict
   };
 
   console.log(JSON.stringify(context, null, 2));

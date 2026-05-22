@@ -60,13 +60,10 @@ function log(msg: string) {
 
 async function scanCycle() {
   lastScan = Date.now();
-  log('🔍 Scan cycle — notifying selector agent (via natural language)');
-  // Business logic removed: selector Agent handles market scanning via NL.
-  // This daemon only exists to trigger the cadence. The Agent itself
-  // decides what to watch, how to detect signals, and when to vote.
-
-  // Notify via advertising department's tool
-  await runScript('send-notify', ['--message', '🔍 盯盘扫描周期启动']);
+  log('🔍 Scan cycle — selector agent does his own work');
+  // Agent-driven: notifies selector via advertising-agent, who then
+  // decides what to scan and how to analyze — no script decides for him.
+  await runScript('send-notify', ['--message', '🔍 选股扫描周期']);
 }
 
 async function auditCycle() {
