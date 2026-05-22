@@ -1,0 +1,174 @@
+# ═══════════════════════════════════════════════
+# 交易触发规则配置
+# ═══════════════════════════════════════════════
+# 每个 trigger 就是一个独立规则，可启用/禁用。
+# 修改此文件后下次扫描即刻生效，无需重启。
+# ═══════════════════════════════════════════════
+
+triggers:
+  # ─── 价格异动 ───
+  - id: price-surge
+    name: "急涨触发"
+    enabled: true
+    type: price_change
+    params:
+      min_change_pct: 3.0        # 最小涨幅 3%
+      lookback_minutes: 5        # 过去 N 分钟内
+      strength: 4                # 信号强度 1-5
+    vote_node: BUY
+
+  - id: price-plunge
+    name: "急跌触发"
+    enabled: true
+    type: price_change
+    params:
+      min_change_pct: -3.0       # 最小跌幅 -3%（买点抄底）
+      lookback_minutes: 5
+      strength: 4
+    vote_node: BUY                # 急跌时投票: 该买吗？
+
+  - id: price-sell-surge
+    name: "暴涨止盈"
+    enabled: true
+    type: price_change
+    params:
+      min_change_pct: 5.0        # 暴涨 5%+ — 考虑卖出
+      lookback_minutes: 10
+      strength: 4
+    vote_node: SELL
+    only_with_position: true     # 仅对已持仓股票触发
+
+  # ─── 成交量异动 ───
+  - id: volume-spike
+    name: "放量异动"
+    enabled: true
+    type: volume_spike
+    params:
+      ratio: 3.0                 # 成交量 > 均量的 3 倍
+      avg_periods: 20            # 均量计算周期
+      strength: 3
+    vote_node: BUY
+
+  - id: volume-dry-up
+    name: "缩量止跌"
+    enabled: false               # 默认关闭，波动较大时开启
+    type: volume_dry
+    params:
+      ratio: 0.3                 # 成交量 < 均量的 30%
+      price_drop_pct: -1.0       # 同时价格小幅下跌
+      strength: 2
+    vote_node: BUY
+
+  # ─── 技术指标 ───
+  - id: ma-golden-cross
+    name: "均线金叉"
+    enabled: true
+    type: ma_cross
+    params:
+      fast_period: 5
+      slow_period: 20
+      direction: golden           # golden | death
+      strength: 4
+    vote_node: BUY
+
+  - id: ma-death-cross
+    name: "均线死叉"
+    enabled: true
+    type: ma_cross
+    params:
+      fast_period: 5
+      slow_period: 20
+      direction: death
+      strength: 4
+    vote_node: SELL
+    only_with_position: true
+
+  - id: rsi-oversold
+    name: "RSI 超卖"
+    enabled: true
+    type: rsi_level
+    params:
+      period: 14
+      threshold: 30              # RSI < 30 超卖
+      strength: 3
+    vote_node: BUY
+
+  - id: rsi-overbought
+    name: "RSI 超买"
+    enabled: true
+    type: rsi_level
+    params:
+      period: 14
+      threshold: 70              # RSI > 70 超买
+      strength: 3
+    vote_node: SELL
+    only_with_position: true
+
+  - id: bollinger-lower
+    name: "布林带下轨"
+    enabled: true
+    type: bollinger_touch
+    params:
+      period: 20
+      std_dev: 2
+      band: lower                # lower | upper | middle
+      strength: 4
+    vote_node: BUY
+
+  - id: bollinger-upper
+    name: "布林带上轨"
+    enabled: true
+    type: bollinger_touch
+    params:
+      period: 20
+      std_dev: 2
+      band: upper
+      strength: 4
+    vote_node: SELL
+    only_with_position: true
+
+  # ─── 时间驱动 ───
+  - id: market-open-scan
+    name: "开盘扫描"
+    enabled: true
+    type: time_event
+    params:
+      minutes_after_open: 30     # 开盘后 N 分钟
+      strength: 2
+    vote_node: BUY
+
+  - id: market-close-scan
+    name: "收盘前扫描"
+    enabled: true
+    type: time_event
+    params:
+      minutes_before_close: 30   # 收盘前 N 分钟
+      strength: 2
+    vote_node: SELL
+    only_with_position: true
+
+# ─── 全局设定 ───
+global:
+  # 关注的标的（为空则扫描所有持仓）
+  watchlist:
+    - NVDA.US
+    - AAPL.US
+    - TSLA.US
+    - MSFT.US
+    - GOOGL.US
+    - AMZN.US
+    - META.US
+
+  # 同一只票触发间隔（秒）
+  cooldown_seconds: 1800          # 30 分钟
+
+  # 止损/止盈强制触发（不受冷却限制）
+  stop_loss_pct: -5.0             # 浮亏 5% 强制投票
+  take_profit_pct: 10.0           # 浮盈 10% 强制投票
+
+  # K线数据拉取天数
+  kline_days: 60
+
+  # 市场时间（北京时间）
+  us_market_open: "21:30"
+  us_market_close: "04:00"
