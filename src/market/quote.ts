@@ -27,9 +27,12 @@ export async function getQuote(symbols: string[]): Promise<any> {
 
 /** 获取日 K 线历史 */
 export async function getKline(symbol: string, start: string, end: string, period: string = 'day'): Promise<any> {
-  const startArg = start ? `--start ${start}` : '--count 50';
-  const endArg = end ? `--end ${end}` : '';
-  return lb(`kline history ${symbol} ${startArg} ${endArg} --period ${period}`);
+  // CLI 语法: longbridge kline history <SYMBOL> [--start <DATE>] [--end <DATE>] [--period <day|week|month>]
+  const parts = [`kline history ${symbol}`];
+  if (start) parts.push(`--start ${start}`);
+  if (end) parts.push(`--end ${end}`);
+  if (period) parts.push(`--period ${period}`);
+  return lb(parts.join(' '));
 }
 
 /** 获取股票基本信息 */
