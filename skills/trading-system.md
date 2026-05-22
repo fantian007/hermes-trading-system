@@ -6,26 +6,31 @@ version: 0.1.0
 
 # Hermes AI 选举交易系统
 
-多 Agent 选举交易系统 — 6 个部门、Phase 1 共 10 个 Agent 协作的自动化交易引擎。
+多 Agent 选举交易系统 — 7 个部门、Phase 1 共 12 个 Agent 协作的自动化交易引擎。
 
 ## 系统架构
 
 ```
-选股部门(1) → 盯盘部门(1) → 策略部门(5) → 选举委员会(1) → 执行部门(1) → Longbridge
-                                                          ↓
-                              审计部门(1) ← ← ← ← ← ← ← ← ←
+数据部门(1) ← ← ← 统一行情数据入口
+     ↑
+选股部门(4) → 盯盘部门(1) → 选举委员会(1) → 执行部门(1) → Longbridge
+                               ↑                      ↓
+                         审核部门×5(5)         审计+HR部门(1)
+                               ↑                      ↓
+                           事后审计 ← ← ← ← ← 交易结果
 ```
 
 ## Agent 职责
 
 | Agent | Profile | 职责 |
 |-------|---------|------|
-| 选股-价格异动 | selector-price | 监控价格异动，提交信号到股池 |
-| 盯盘 | watch-agent | 扫描股池，触发投票轮次 |
-| 策略 ×5 | strategy-01~05 | 独立分析行情并投票 |
-| 选举委员 | election-committee | 加权聚合投票，输出决策 |
-| 执行 | execution-agent | 下单执行、风控 |
-| 审计 | auditor-agent | 胜率统计、淘汰管理 |
+| 数据 | data-agent | 统一行情数据接口，其他部门通过自然语言索取报价/K线/账户/持仓 |
+| 选股 ×4 | strategy-01~04 | 技术分析扫描候选标的，将信号写入股池 |
+| 盯盘 | watch-agent | 扫描股池，检测异动，发起投票轮次 |
+| 审核官 ×5 | review-01~05 | 事后审核交易决策质量（PASS/WARN/FAIL），不参与事前投票 |
+| 选举委员 | election-committee | 与审核官聊天收集意见，自己做最终决策 |
+| 执行 | execution-agent | 下单执行、风控检查、持仓监控 |
+| 审计+HR | auditor-agent | 胜率排名、淘汰/影子期/复活人事决策 |
 
 ## 快速开始
 
@@ -49,16 +54,17 @@ npx tsx sql/seeds/seed.ts
 
 ### 4. 注册 Hermes Profiles
 ```bash
+hermes profile create -f profiles/data-agent.yaml
 hermes profile create -f profiles/selector-price.yaml
 hermes profile create -f profiles/watch-agent.yaml
 hermes profile create -f profiles/election-committee.yaml
 hermes profile create -f profiles/execution-agent.yaml
 hermes profile create -f profiles/auditor-agent.yaml
-hermes profile create -f profiles/strategy-01.yaml
-hermes profile create -f profiles/strategy-02.yaml
-hermes profile create -f profiles/strategy-03.yaml
-hermes profile create -f profiles/strategy-04.yaml
-hermes profile create -f profiles/strategy-05.yaml
+hermes profile create -f profiles/review-01.yaml
+hermes profile create -f profiles/review-02.yaml
+hermes profile create -f profiles/review-03.yaml
+hermes profile create -f profiles/review-04.yaml
+hermes profile create -f profiles/review-05.yaml
 ```
 
 ### 5. 运行盯盘（主循环入口）
