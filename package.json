@@ -1,7 +1,7 @@
 {
   "name": "hermes-trading-system",
-  "version": "0.1.0",
-  "description": "AI Electoral Trading System — Multi-Agent automated trading with Hermes Kanban",
+  "version": "1.0.0",
+  "description": "AI Electoral Trading System — 19 Agents · 8 Departments · Natural Language Decisions · Multi-Agent automated trading with Hermes Kanban",
   "private": true,
   "type": "module",
   "scripts": {
