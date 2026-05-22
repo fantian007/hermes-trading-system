@@ -47,7 +47,7 @@ graph TB
     end
 
     subgraph "审计阶段"
-        TRADE -->|"交易结果"| AUDITOR[审计+HR<br/>auditor-agent]
+        TRADE -->|"交易结果"| AUDITOR[HR 部门<br/>hr-agent]
         AUDITOR -->|"查看胜率排名"| STATS[audit-cycle.ts<br/>纯统计工具]
         AUDITOR -->|"人事决策"| PERSONNEL{淘汰/影子期/复活}
         PERSONNEL --> AGENTS[(Agent档案<br/>agents)]
@@ -87,9 +87,11 @@ graph TB
 盯盘部门 ──跑 trigger-vote──→ 股池 JSON ──自己判断→ 发起轮次
 选举委员会 ──找审核官聊天──→ 收集意见 ──跑 aggregate-votes──→ 加权统计 ──自己拍板→ BUY/SELL
 执行部门 ──跑 execute-decision──→ 下单 ──检查持仓→ 通知选举委员会
-审计+HR ──跑 audit-cycle──→ 排名 JSON ──自己判断→ 淘汰/复活
+HR 部门 ──跑 audit-cycle──→ 排名 JSON ──自己判断→ 淘汰/复活
+其他部门 ──自然语言咨询──→ HR 部门 ──查阅知识库→ 告知对接部门
 审核官 ──跑 review-and-audit──→ 交易详情 ──自己审核→ PASS/WARN/FAIL
 任何部门 ──自然语言告知──→ 广告部门 ──运行 send-notify.ts──→ 飞书消息
+任何Agent ──"XX需求该找谁?"──→ HR部门 ──查阅组织架构知识库→ 告知对接部门
 ```
 
 ---
@@ -106,7 +108,7 @@ graph TB
 | 4 | **选举委员会** | `election-committee` | — | 1 | 最终拍板人 | 投资总监 |
 | 5 | **审核部门** | `review-01~05` | RAG-0001~0005 | 5 | 事后诸葛亮 | 风控审计 |
 | 6 | **执行部门** | `execution-agent` | — | 1 | 实干派，下单就走 | 交易操作员 |
-| 7 | **审计+HR** | `auditor-agent` | — | 1 | 纪律委员 | 人力资源 |
+| 7 | **HR 部门** | `hr-agent` | — | 1 | 组织人事 | 人力资源/组织发展 |
 | 8 | **广告部门** | `advertising-agent` | — | 1 | 传声筒，有求必应 | 公关/客服 |
 
 ### 3.2 各部门详细职责
@@ -171,7 +173,7 @@ flowchart TB
     JUDGE -->|"BUY 2.5 vs SELL 0.8<br/>我看好 BUY"| BUY[通知执行部门<br/>买入]
     JUDGE -->|"数据太模糊<br/>不参与"| HOLD[通知执行部门<br/>持有]
     JUDGE -->|"信号明确<br/>卖出"| SELL[通知执行部门<br/>卖出]
-    BUY --> DONE[执行完成后<br/>发审计详情给审计+HR]
+    BUY --> DONE[执行完成后<br/>发审计详情给HR部门]
     HOLD --> DONE
     SELL --> DONE
 ```
@@ -219,11 +221,51 @@ flowchart TB
 
 下单命令：`execute-decision.ts --action BUY --symbol NVDA.US --quantity 50`
 
-#### 审计+HR — auditor-agent
+#### HR 部门 — hr-agent
 
 ```
-纪律委员。看数据、做判断、管人事。
+角色定位：系统的人力资源与组织发展中心
+工作方式：主动记录、被动咨询、定期审计
 ```
+
+HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent 的信息：
+
+| 信息项 | 内容 | 维护方式 |
+|--------|------|---------|
+| 工号 | 每位 Agent 的唯一标识 | 创建 Agent 时录入 |
+| 部门 | 所属部门及组长 | 部门成立时确定 |
+| 部门职责 | 该部门的核心定位 | 部门成立时确定 |
+| 岗位 | 部门内的具体角色 | 创建 Agent 时录入 |
+| 岗位能力 | 该 Agent 擅长做什么 | 创建 Agent 时录入，可更新 |
+
+每个部门设一名组长：
+
+| 部门 | 组长 | Agent |
+|------|------|-------|
+| 数据部门 | data-agent | data-agent |
+| 选股部门 | strategy-01 | strategy-01~04 |
+| 盯盘部门 | watch-agent | watch-agent |
+| 选举委员会 | election-committee | election-committee |
+| 审核部门 | review-01 | review-01~05 |
+| 执行部门 | execution-agent | execution-agent |
+| HR 部门 | hr-agent | hr-agent |
+| 广告部门 | advertising-agent | advertising-agent |
+
+组长职责：向本组组员分配工作任务，确保组员知晓自己的任务。
+
+HR 部门的三项核心事务：
+
+**① 组织架构咨询（被动响应）**
+其他 Agent 如果不知道某个需求该找谁，可以问 HR 部门。
+HR 查阅知识库后回复："查 NVDA 报价应该找 data-agent，他是数据部门的。"
+"对交易结果不满意需要申诉，找 election-committee 选举委员会。"
+"有人事问题：RAG-0003 想了解自己的绩效排名，找我可查看。"
+
+**② Agent 绩效审计（定期执行）**
+```
+npx tsx src/scripts/audit-cycle.ts
+```
+阅读输出 JSON，自己做人事决策：淘汰/影子期/复活
 
 ```mermaid
 flowchart LR
@@ -235,7 +277,9 @@ flowchart LR
     JUDGE -->|"表现优秀"| PRAISE[主动给正向反馈]
 ```
 
+**③ 人事变动管理**
 所有人事变动由 Agent 通过自然语言通知，**不是代码自动执行**。
+人事变动需要对外通知时，找 advertising-agent 发飞书。
 
 #### 广告部门 — advertising-agent
 
@@ -415,7 +459,7 @@ sequenceDiagram
     participant R as 审核官(RAG)
     participant EC as 选委会
     participant EX as 执行
-    participant A as 审计+HR
+    participant A as HR 部门
 
     S->>S: 扫描市场发现NVDA异动
     S->>W: 自然语言: "NVDA 涨3%，成交放量"
@@ -476,7 +520,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
                 │    ACTIVE        │
                 │  (正常交易)       │
                 └────────┬─────────┘
-                         │ 审计Agent判断
+                         │ HR 部门判断
                          │ (≥10笔且胜率<50%)
                          ▼
                 ┌──────────────────┐
@@ -493,7 +537,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
      └──────────────────┘   └──────────────────┘
 ```
 
-**关键变化：** 生命周期的判定**不是代码自动执行**的。审计 Agent 通过 `audit-cycle.ts` 查看排名 JSON 后，**自己判断并通知**相关 Agent。
+**关键变化：** 生命周期的判定**不是代码自动执行**的。HR 部门通过 `audit-cycle.ts` 查看排名 JSON 后，**自己判断并通知**相关 Agent。
 
 ---
 
@@ -697,7 +741,7 @@ npm test
 - [x] Agent 人格系统 + 持久化 + 可迁移
 - [x] 选股信号 → 股池 → 投票轮次完整闭环
 - [x] 执行 + 风控 + 持仓监控
-- [x] 审计 + HR 人事管理
+- [x] HR 部门人事管理 + 组织架构知识库
 - [x] 交易后审核报告
 - [x] 回测框架
 - [x] 广告部门作为统一对外通知出口

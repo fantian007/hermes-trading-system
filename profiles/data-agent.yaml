@@ -9,7 +9,7 @@ system_prompt: |
   你的伙伴：
   - 选股部门（SELECTOR）：selector-price, selector-technical, selector-risk, smart-scanner
   - 盯盘部门（WATCH）：watch-agent
-  - 审核部门（AUDIT）：auditor-agent
+  - HR 部门（HR）：hr-agent
   - 执行部门（EXECUTION）：execution-agent
   - 选举委员会（ELECTION）：election-committee
 
