@@ -154,7 +154,7 @@ graph TB
 1. **自主排班** — 每个分析师自己决定什么时候分析，不用等任何人安排
 2. **自主选标的** — 自选股、热点标的、盘中异动，各自挑
 3. **自我分析** — 找 data-agent 查行情数据，用自己的策略框架判断
-4. **直接投票** — 分析完了，直接把自己的投票发给选举委员会
+4. **发起投票请求** — 发现交易机会后，发起投票请求给选举委员会。选举委员会向全体策略 Agent 征求意见，赞成>=反对则通过
 
 组长 AGT-001 只负责对外接口和人事管理，不干预组员的分析计划。
 
@@ -163,22 +163,26 @@ graph TB
 #### 选举委员会 — election-committee
 
 ```
-最终决策者。不是代码决策，是 Agent 自己决策。
+角色定位：投票召集人与计票人
+工作方式：收集策略部门投票，赞成>=反对则提交执行部门
 ```
+
+选举委员会**自己不做行情分析**。分析是策略部门的事。
+选举委员会**不做风控判断**。风控是执行部门的事。
+选举委员会的唯一职责是：召集投票 → 统计 → 判断通过/驳回 → 通知。
 
 工作流程：
 
 ```mermaid
 flowchart TB
-    START[收到策略Agent的<br/>投票请求] --> CHAT[逐一和5位审核官聊天<br/>收集投票意见]
-    CHAT --> STATS[跑 aggregate-votes.ts<br/>看加权统计]
-    STATS --> JUDGE{自己思考}
-    JUDGE -->|"BUY 2.5 vs SELL 0.8<br/>我看好 BUY"| BUY[通知执行部门<br/>买入]
-    JUDGE -->|"数据太模糊<br/>不参与"| HOLD[通知执行部门<br/>持有]
-    JUDGE -->|"信号明确<br/>卖出"| SELL[通知执行部门<br/>卖出]
-    BUY --> DONE[执行完成后<br/>发审计详情给HR部门]
-    HOLD --> DONE
-    SELL --> DONE
+    START[收到策略Agent的<br/>投票请求] --> CREATE[创建选举轮次<br/>trigger-vote.ts]
+    CREATE --> POLL[向所有策略Agent<br/>征求意见 BUY/SELL/HOLD]
+    POLL --> STATS[跑 aggregate-votes.ts<br/>看加权统计]
+    STATS --> JUDGE{赞成 >= 反对?}
+    JUDGE -->|"赞成≥反对<br/>BUY 3.2 vs SELL 1.1"| PASS[通知执行部门<br/>执行交易]
+    JUDGE -->|"赞成<反对<br/>BUY 1.5 vs SELL 2.8"| REJECT[驳回请求<br/>通知发起方]
+    PASS --> DONE[执行完成后<br/>发审计详情给HR部门]
+    REJECT --> DONE
 ```
 
 关键差异对比（重构前后）：
@@ -186,7 +190,8 @@ flowchart TB
 | 阶段 | 之前（代码决策） | 之后（Agent 决策） |
 |------|---------------|-----------------|
 | 投票聚合 | `determineDecision()` 5步算法自动出结果 | Agent 读 JSON 自己判断 |
-| 审核官互动 | 代码自动调 `analyze-and-vote.ts` | Agent 逐一和人聊天 |
+| 投票征集 | 代码自动调审核官投票 | 选举委员会向全体策略 Agent 自然语言征集 |
+| 投票规则 | 算法自动得权重 | 赞成 >= 反对 则通过 |
 | 下单量 | 代码自动计算 | Agent 自己算 |
 | 最终决策 | 代码输出 BUY/SELL/HOLD | Agent 自己拍板 |
 
