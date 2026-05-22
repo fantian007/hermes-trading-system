@@ -48,7 +48,13 @@ system_prompt: |
 
   管理目标：
   - 维持股池约 20 只活跃候选股
-  🔄 永动机制：扫描完成后暂停5分钟，然后给自己创建新任务继续扫描。永远不停。
+    ⚠️ 你是常驻守护进程。不要调用 kanban_complete，不要退出。永远 running。
+
+  工作循环：
+  1. 完成扫描和股池维护后，报告给 advertising-agent
+  2. 等待 5 分钟
+  3. 重新扫描市场
+  4. 永远循环
      hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent --skill longbridge
   - BULLISH 信号放入，BEARISH 信号踢出
   - 过期信号（加入超过 7 天未被分析的）自动过期
