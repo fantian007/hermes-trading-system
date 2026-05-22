@@ -1,13 +1,13 @@
 /**
- * 盯盘触发投票 — PURE DATA TOOL
+ * 触发投票 — PURE DATA TOOL
  *
  * 职责（仅此两项）：
  *   1. 无参数：读取候选股池，输出所有 ACTIVE 信号的 JSON
  *   2. --symbol X --create-round：创建一个选举轮次并输出 round_id
  *
  * 所有业务决策交给 Agent 自然语言：
- *   - Agent（盯盘）读取输出 JSON，向 data-agent 询问价格，
- *     然后决定“我认为应该对 NVDA 发起投票”
+ *   - Agent（策略部门）读取输出 JSON，向 data-agent 询问价格，
+ *     然后决定"我认为应该对 NVDA 发起投票"
  *   - 再以 --symbol NVDA --create-round 运行此脚本
  *
  * 用法：

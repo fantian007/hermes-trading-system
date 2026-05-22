@@ -1,6 +1,6 @@
 # AI 选举交易系统 — 技术方案 v3
 
-> **版本**: Phase 1 MVP v2026.05 | **状态**: 编码完成 | **Agent 数量**: 12 | **部门**: 7 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写
+> **版本**: Phase 1 MVP v2026.05 | **状态**: 编码完成 | **Agent 数量**: 15 | **部门**: 6 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，6 位分析师自主分析
 
 ---
 
@@ -28,12 +28,8 @@
 
 ```mermaid
 graph TB
-    subgraph "选股阶段"
-        SELECTOR[选股Agent ×4<br/>strategy-01~04] ==>|"自己找 data-agent 查数据<br/>自己分析、自己判断<br/>然后找盯盘聊天"| WATCH
-    end
-
-    subgraph "盯盘阶段"
-        WATCH[盯盘Agent<br/>watch-agent] ==>|"问 selector 有什么发现<br/>自己判断时机是否成熟<br/>找选举委员会发起轮次"| EC[选举委员会<br/>election-committee]
+    subgraph "策略阶段（自主分析）"
+        STRATEGY[策略Agent ×6<br/>strategy-01~06] ==>|"自己找 data-agent 查数据<br/>自己分析、自己判断<br/>直接投票给选举委员会"| EC[选举委员会<br/>election-committee]
     end
 
     subgraph "投票阶段"
@@ -75,8 +71,7 @@ graph TB
 
     style AD fill:#f57f17,color:#fff
     style DATA fill:#1a237e,color:#fff
-    style SELECTOR fill:#004d40,color:#fff
-    style WATCH fill:#e65100,color:#fff
+    style STRATEGY fill:#004d40,color:#fff
     style EC fill:#4a148c,color:#fff
     style REVIEW fill:#01579b,color:#fff
     style EXEC fill:#b71c1c,color:#fff
@@ -86,8 +81,7 @@ graph TB
 ### 数据流简图
 
 ```
-|选股Agent ──找 data-agent 要数据──→ 行情 JSON ──自己分析→ 找盯盘聊天
-|盯盘Agent ──问 selector → 问 data-agent 确认 → 自己判断成熟度→ 找选举委员会聊天
+|策略Agent ──找 data-agent 要数据──→ 行情 JSON ──自己分析→ 直接投票给选举委员会
 |选举委员会 ──找审核官聊天──→ 收集意见 ──跑 aggregate-votes──→ 加权统计 ──自己拍板→ BUY/SELL
 |执行部门 ──做风控判断──→ 向数据部门提需求──→ 数据部门跑 execute-decision──→ 下单结果返回执行部门
 |HR 部门 ──跑 audit-cycle──→ 排名 JSON ──自己判断→ 淘汰/复活
@@ -99,20 +93,19 @@ graph TB
 
 ---
 
-## 3. 7 大部门职责
+## 3. 6 大部门职责
 
 ### 3.1 部门矩阵
 
 | # | 部门 | Agent | 工号体系 | 人数 | 对话风格 | 自然人对应 |
 |---|------|-------|---------|------|---------|-----------|
 | 1 | **数据部门** | `data-agent` | — | 1 | 工具人，你问我答 | IT 运维 + 交易操作 |
-| 2 | **选股部门** | `strategy-01~04` | AGT-001~004 | 4 | 技术宅，发现异动 | 分析师 |
-| 3 | **盯盘部门** | `watch-agent` | — | 1 | 巡逻兵，时刻盯盘 | 交易员 |
-| 4 | **选举委员会** | `election-committee` | — | 1 | 最终拍板人 | 投资总监 |
-| 5 | **审核部门** | `review-01~05` | RAG-001~005 | 5 | 事后诸葛亮 | 风控审计 |
-| 6 | **执行部门** | `execution-agent` | — | 1 | 风控判断，向数据部门提需求 | 风控官 |
-| 7 | **HR 部门** | `hr-agent` | — | 1 | 组织人事 | 人力资源/组织发展 |
-| 8 | **广告部门** | `advertising-agent` | — | 1 | 传声筒，有求必应 | 公关/客服 |
+| 2 | **策略部门** | `strategy-01~06` | AGT-001~006 | 6 | 独立分析师，自主排班 | 分析师/交易员 |
+| 3 | **选举委员会** | `election-committee` | — | 1 | 最终拍板人 | 投资总监 |
+| 4 | **审核部门** | `review-01~05` | RAG-001~005 | 5 | 事后诸葛亮 | 风控审计 |
+| 5 | **执行部门** | `execution-agent` | — | 1 | 风控判断，向数据部门提需求 | 风控官 |
+| 6 | **HR 部门** | `hr-agent` | — | 1 | 组织人事 | 人力资源/组织发展 |
+| 7 | **广告部门** | `advertising-agent` | — | 1 | 传声筒，有求必应 | 公关/客服 |
 
 ### 3.2 各部门详细职责
 
@@ -140,40 +133,32 @@ graph TB
 - 交易执行由执行部门提需求 → 数据部门执行 → 结果返回给执行部门
 - 数据部门不做风控判断，收到指令就执行
 
-#### 选股部门 — strategy-01~04
+#### 策略部门 — strategy-01~06
 
 ```
-角色定位：技术分析研究人员
-工作方式：主动找 data-agent 拿数据，自己分析，找盯盘聊天
+角色定位：独立分析师团队，自主排班、自主分析、自主投票
+工作方式：每个分析师自己决定分析节奏和标的，直接投票给选举委员会
 ```
 
 | 工号 | 名称 | 策略框架 | 分析视角 |
 |------|------|---------|---------|
-| AGT-001 | 均线交叉策略官 | MA5/MA20 位置关系 | "均线在说什么？金叉还是缠绕？" |
+| AGT-001 | 均线交叉策略官（组长） | MA5/MA20 位置关系 | "均线在说什么？金叉还是缠绕？" |
 | AGT-002 | MACD 策略官 | DIF/DEA 交叉+柱状图 | "MACD 支持哪个方向？有没有背离？" |
 | AGT-003 | RSI 策略官 | 相对强弱指标 | "现在是超买还是超卖？趋势配合吗？" |
 | AGT-004 | 布林带策略官 | 轨道位置+带宽 | "价格在布林带哪个位置？带宽有收缩吗？" |
 | AGT-005 | 海龟策略官 | 突破 N 日高低点+ATR | "有突破吗？突破质量如何？" |
+| AGT-006 | 价格异动策略官 | 涨跌幅异常+放量突破 | "盘面有什么异动？量价配合如何？" |
 
-选股 Agent 的工作流程：
-1. 找 data-agent 拿 K 线数据
-2. 自己看数据，用自己的策略框架分析
-3. 找盯盘 Agent 聊天："我发现 NVDA 均线金叉了，你看看有没有意思"
+策略部门的核心工作方式：
 
-没有脚本替他们做选股判断。信号不写入股池——直接找盯盘 Agent 聊。
+1. **自主排班** — 每个分析师自己决定什么时候分析，不用等任何人安排
+2. **自主选标的** — 自选股、热点标的、盘中异动，各自挑
+3. **自我分析** — 找 data-agent 查行情数据，用自己的策略框架判断
+4. **直接投票** — 分析完了，直接把自己的投票发给选举委员会
 
-#### 盯盘部门 — watch-agent
+组长 AGT-001 只负责对外接口和人事管理，不干预组员的分析计划。
 
-```
-角色定位：巡逻兵，主动找 selector 问发现，判断是否值得投票
-工作方式：自然语言聊天驱动，不用定时脚本
-```
-
-- 主动找 selector-price 聊天："最近有什么发现？"
-- 听完后找 data-agent 确认行情
-- 用自己的判断决定：这个信号值不值得发起投票
-- 觉得值得，就找选举委员会说："我发现 NVDA 有信号，你看看要不要发起"
-- 不用 trigger-vote 脚本，直接自然语言沟通
+没有脚本替他们做选股判断。所有决策依靠 Agent 自己的分析能力。】
 
 #### 选举委员会 — election-committee
 
@@ -185,7 +170,7 @@ graph TB
 
 ```mermaid
 flowchart TB
-    START[收到盯盘Agent的<br/>投票轮次通知] --> CHAT[逐一和5位审核官聊天<br/>收集投票意见]
+    START[收到策略Agent的<br/>投票请求] --> CHAT[逐一和5位审核官聊天<br/>收集投票意见]
     CHAT --> STATS[跑 aggregate-votes.ts<br/>看加权统计]
     STATS --> JUDGE{自己思考}
     JUDGE -->|"BUY 2.5 vs SELL 0.8<br/>我看好 BUY"| BUY[通知执行部门<br/>买入]
@@ -270,8 +255,7 @@ HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent
 | 部门 | 组长 | Agent |
 |------|------|-------|
 | 数据部门 | data-agent | data-agent |
-| 选股部门 | strategy-01 | strategy-01~04 |
-| 盯盘部门 | watch-agent | watch-agent |
+| 策略部门 | strategy-01 | strategy-01~06 |
 | 选举委员会 | election-committee | election-committee |
 | 审核部门 | review-01 | review-01~05 |
 | 执行部门 | execution-agent | execution-agent |
@@ -521,39 +505,41 @@ erDiagram
 ### 5.1 完整交易周期
 
 ```
-选股 → 盯盘 → 投票 → 决策 → 执行 → 审计 → 审核
+策略分析 → 投票 → 决策 → 执行 → 审计 → 审核
                                       ↓
                                    关闭交易
 ```
 
 ```mermaid
 sequenceDiagram
-    participant S as 选股(AGT)
-    participant W as 盯盘
+    participant S as 策略(AGT)
     participant R as 审核官(RAG)
     participant EC as 选委会
     participant EX as 执行
     participant A as HR 部门
 
-    S->>S: 扫描市场发现NVDA异动
-    S->>W: 自然语言: "NVDA 涨3%，成交放量"
-    W->>W: 读股池、验证信号
-    W->>EC: 发起投票轮次 ELEC-001
-    EC->>R: "NVDA 怎么看?"
-    R->>EC: "均线金叉了，BUY 0.8"
-    R->>EC: "MACD柱状图放大，BUY 0.7"
-    R->>EC: "RSI 62 中性偏多，BUY 0.6"
-    R->>EC: "布林带中轨向上，BUY 0.75"
-    R->>EC: "海龟通道没突破，HOLD 0.5"
+    S->>S: 自主分析NVDA行情
+    S->>EC: "均线金叉了，建议BUY NVDA"
+    S->>EC: "MACD柱状图放大，也看BUY"
+    S->>EC: "RSI 62中性偏多，BUY"
+    S->>EC: "布林带中轨向上，BUY"
+    S->>EC: "海龟通道没突破，HOLD"
+    S->>EC: "价格异动+2.3%，BUY"
+    EC->>R: "策略官们说了，NVDA 怎么看?"
+    R->>EC: "均线位置合理，PASS"
+    R->>EC: "MACD支持，PASS"
+    R->>EC: "RSI 62还行，PASS"
+    R->>EC: "布林带位置合适，PASS"
+    R->>EC: "没突破，WARN"
     EC->>EC: 跑aggregate-votes.ts看加权
-    EC->>EC: "BUY加权3.6 vs SELL 0, 我决定BUY"
+    EC->>EC: "BUY加权4.2 vs HOLD 0.5, 我决定BUY"
     EC->>EX: "买入NVDA 50股"
-    EX->>EX: 风控判断→算量→下单
+    EX->>EX: 风控判断→向数据部门提需求
     EX->>EC: "交易完成, trade_id=TRD-001"
     EC->>A: "决策详情发你审计"
     A->>R: "审核TRD-001的交易质量"
     R->>A: "PASS: 均线位置合理"
-    R->>A: "WARN: RSI有点高"
+    R->>A: "WARN: RSI偏高"
     R->>A: "PASS: 布林带支持"
     A->>A: 跑audit-cycle.ts更新排名
     A->>A: "AGT-003 40%胜率了..."
@@ -695,12 +681,9 @@ agent_weight = win_rate × log₂(1 + total_trades)
 hermes-trading-system/
 ├── profiles/            # Hermes Agent Profile (YAML)
 │   ├── data-agent.yaml
-│   ├── watch-agent.yaml
-│   ├── election-committee.yaml
-│   ├── execution-agent.yaml
-│   ├── auditor-agent.yaml
 │   ├── review-01~05.yaml       # 5位审核官
-│   └── strategy-01~04.yaml     # 4位选股策略
+│   ├── strategy-01~06.yaml     # 6位策略分析师
+│   └── ...
 ├── src/
 │   ├── core/           # 基础设施
 │   │   ├── db.ts           # SQLite 连接
@@ -804,13 +787,13 @@ npm test
 
 | Phase | Agent 数 | 新功能 | 状态 |
 |-------|---------|--------|------|
-| **Phase 1** | 10→12 | 最小闭环：选股→盯盘→投票→执行→审计→审核 | ✅ 编码完成 |
+| **Phase 1** | 15 | 最小闭环：策略分析→投票→执行→审计→审核 | ✅ 编码完成 |
 | **Phase 2** | 20-25 | 舆情/社媒选股、WebSocket 实时行情、港股支持 | 📋 规划中 |
 | **Phase 3** | 54 | 多平台信号、部分加仓、动态调参、自动招聘 | 🗓️ 未来 |
 
 ### Phase 1 MVP 完成清单
 
-- [x] 7 部门 12 Agent 架构
+- [x] 6 部门 15 Agent 架构（选股+盯盘合并为策略部门）
 - [x] 所有业务决策从代码迁移到 Agent 自然语言
 - [x] 数据部门作为统一行情入口
 - [x] 策略→审核部门重构（事前预测 → 事后审核）

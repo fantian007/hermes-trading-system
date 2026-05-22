@@ -35,7 +35,7 @@ try {
   execSql('PRAGMA foreign_keys = ON');
   console.log('[seed] Cleared old data');
 
-  // 3) Agents
+  // 3) Agents — 15 人，策略部门 6 人（选股+盯盘合并）
   execSql(`
     INSERT INTO agents (agent_id, agent_name, profile_name, strategy_source, strategy_summary, indicators, status, created_by) VALUES
       ('DAT-001', '数据管家', 'data-agent', '', '统一行情接口', '[]', 'ACTIVE', 'system'),
@@ -43,8 +43,9 @@ try {
       ('AGT-002', 'MACD策略官', 'strategy-02', '技术分析', 'DIF 上穿 DEA 买入，柱状图背离确认', '["macd"]', 'ACTIVE', 'system'),
       ('AGT-003', 'RSI策略官', 'strategy-03', '技术分析', 'RSI<30 超卖买入，RSI>70 超买卖出', '["rsi"]', 'ACTIVE', 'system'),
       ('AGT-004', '布林带策略官', 'strategy-04', '技术分析', '触及下轨买入，上轨卖出，带宽收缩预示突破', '["bollinger"]', 'ACTIVE', 'system'),
-      ('WAT-001', '巡逻兵', 'watch-agent', '', '监控候选股池，判断投票时机', '[]', 'ACTIVE', 'system'),
-      ('ELC-001', '投资总监', 'election-committee', '', '最终决策者，收集审核官意见后拍板', '[]', 'ACTIVE', 'system'),
+      ('AGT-005', '海龟交易策略官', 'strategy-05', '《海龟交易法则》', '价格突破 N 日高低点结合 ATR 波动率判断', '["donchian","atr"]', 'ACTIVE', 'system'),
+      ('AGT-006', '价格异动策略官', 'strategy-06', '价格行为分析', '涨跌幅异常+放量突破，盘面异动监控', '["price"]', 'ACTIVE', 'system'),
+      ('ELC-001', '投资总监', 'election-committee', '', '最终决策者，收集策略官和审核官意见后拍板', '[]', 'ACTIVE', 'system'),
       ('RAG-001', '均线交叉审核官', 'review-01', '《股市趋势技术分析》', '基于MA5/MA20位置关系审核', '["ma"]', 'ACTIVE', 'system'),
       ('RAG-002', 'MACD审核官', 'review-02', '技术分析', '基于MACD柱状图和信号线审核', '["macd"]', 'ACTIVE', 'system'),
       ('RAG-003', 'RSI审核官', 'review-03', '技术分析', '基于RSI超买/超卖区域审核', '["rsi"]', 'ACTIVE', 'system'),
@@ -54,25 +55,24 @@ try {
       ('HR-001', '人事总监', 'hr-agent', '', '组织发展与人事管理', '[]', 'ACTIVE', 'system'),
       ('ADV-001', '传声筒', 'advertising-agent', '', '对外通知发送', '[]', 'ACTIVE', 'system');
   `);
-  console.log('[seed] 15 agents seeded');
+  console.log('[seed] 16 agents seeded');
 
-  // 4) Departments
+  // 4) Departments — 7 个部门（策略部门替代了选股+盯盘）
   execSql(`
     INSERT INTO departments (dept_id, dept_name, dept_desc, leader_agent_id, created_by) VALUES
       ('DPT-001', '数据部门', '统一行情接口', 'DAT-001', 'system'),
-      ('DPT-002', '选股部门', '扫描市场发现交易机会', 'AGT-001', 'system'),
-      ('DPT-003', '盯盘部门', '监控候选股池，发起选举轮次', 'WAT-001', 'system'),
-      ('DPT-004', '选举委员会', '收集意见后拍板BUY/SELL/HOLD', 'ELC-001', 'system'),
-      ('DPT-005', '审核部门', '交易后的事后审核', 'RAG-001', 'system'),
-      ('DPT-006', '执行部门', '下单、风控、持仓监控', 'EXE-001', 'system'),
-      ('DPT-007', 'HR部门', '人事管理、绩效审计、组织架构咨询', 'HR-001', 'system'),
-      ('DPT-008', '广告部门', '对外通知出口', 'ADV-001', 'system');
+      ('DPT-002', '策略部门', '独立分析师团队，自主排班、自主分析、自主投票', 'AGT-001', 'system'),
+      ('DPT-003', '选举委员会', '收集策略官和审核官意见后拍板BUY/SELL/HOLD', 'ELC-001', 'system'),
+      ('DPT-004', '审核部门', '交易后的事后审核', 'RAG-001', 'system'),
+      ('DPT-005', '执行部门', '下单、风控、持仓监控', 'EXE-001', 'system'),
+      ('DPT-006', 'HR部门', '人事管理、绩效审计、组织架构咨询', 'HR-001', 'system'),
+      ('DPT-007', '广告部门', '对外通知出口', 'ADV-001', 'system');
   `);
-  console.log('[seed] 8 departments seeded');
+  console.log('[seed] 7 departments seeded');
 
   // 5) 验证 - profiles 必须已有对应文件
   const profileFiles = ['data-agent', 'strategy-01', 'strategy-02', 'strategy-03', 'strategy-04',
-    'watch-agent', 'election-committee', 'review-01', 'review-02', 'review-03', 'review-04', 'review-05',
+    'strategy-05', 'strategy-06', 'election-committee', 'review-01', 'review-02', 'review-03', 'review-04', 'review-05',
     'execution-agent', 'hr-agent', 'advertising-agent'];
   let missing = 0;
   for (const pf of profileFiles) {
@@ -82,14 +82,14 @@ try {
       missing++;
     }
   }
-  if (missing === 0) console.log('[seed] All 15 profile files present');
+  if (missing === 0) console.log('[seed] All 16 profile files present');
   else console.warn(`[seed] ${missing} profile(s) missing — 请创建后再注册`);
 
   // 6) 验证
   const db = getDb();
   const rows = db.prepare(`
     SELECT d.dept_name, d.leader_agent_id, COUNT(ad.agent_id) as cnt
-    FROM departments d LEFT JOIN agent_duties ad ON d.dept_id = ad.dept_id
+    FROM departments d LEFT JOIN agents ad ON d.leader_agent_id = ad.agent_id
     GROUP BY d.dept_id ORDER BY d.dept_name
   `).all();
   console.log('\n部门验证：');
