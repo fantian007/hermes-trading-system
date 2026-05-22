@@ -9,10 +9,14 @@
  *     --confidence 0.72
  *
  * 执行 Agent 调用：
- *   1. 风控检查
- *   2. 计算下单量
- *   3. 提交订单（Longbridge 模拟盘）
- *   4. 输出交易 ID
+ *   1. (可选) 向 data-agent 请求当前价格 → data-service --type quote --symbol <SYM>
+ *   2. 风控检查
+ *   3. 计算下单量
+ *   4. 提交订单（Longbridge 模拟盘）
+ *   5. 输出交易 ID
+ *
+ * 注意：在自然语言对话流程中，执行 Agent 应先问 data-agent "当前 NVDA.US 价格是多少？"
+ *       data-agent 返回价格后再运行此脚本。脚本内部也保留了 getQuote 调用作为兜底。
  */
 
 import { submitBuyOrder, submitSellOrder } from '../trading/order.js';
