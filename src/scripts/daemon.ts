@@ -53,7 +53,7 @@ function runScript(script: string, args: string[] = []): Promise<string> {
 
 function log(msg: string) {
   const ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  process.stdout.write(`[${ts}] ${msg}\n`);
+  console.log(`[${ts}] ${msg}`);
 }
 
 async function scanCycle() {
