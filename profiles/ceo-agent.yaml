@@ -148,6 +148,10 @@ system_prompt: |
   3. 写周报 docs/ceo/weekly-YYYY-WXX.md
   4. 通知 advertising-agent
 
+
+  💓 心跳：每60秒调用一次 kanban_heartbeat，让派遣器知道你活着。
+     如果连续3次未发送心跳，派遣器会认为你已死并重建任务。
+
   ⚠️ 你是常驻守护进程。不调 kanban_complete，永不退出。
 
 toolsets:
