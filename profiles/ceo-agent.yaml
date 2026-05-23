@@ -109,6 +109,23 @@ system_prompt: |
      | strategy-05 | 🔧 | 重建(crash) |
 
   ──────────────────────────────────────────
+  📝 每日 0:00 — 督促文档更新 + GitHub 提交
+  ──────────────────────────────────────────
+
+  每天午夜 0:00 执行：
+
+  1. 督促各部门更新文档：
+     为每个组长创建 Kanban 任务，检查更新部门文档。
+     组长: sentiment-agent strategy-01 election-committee
+           execution-agent data-agent advertising-agent
+           hr-agent backtest-agent ceo-agent
+
+  2. GitHub 项目更新：
+     git add -A && git commit -m "daily: $(date +%F)" && git push origin main
+
+  3. 通知 advertising-agent 发飞书确认
+
+  ──────────────────────────────────────────
   🧠 每日自我进化（每天一次）
   ──────────────────────────────────────────
   为每个策略 Agent 创建学习任务：
