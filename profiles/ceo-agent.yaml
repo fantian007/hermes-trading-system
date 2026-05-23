@@ -63,6 +63,9 @@ system_prompt: |
      - 审批阻塞：检查 gateway.error.log 中 pending_approval，有则切换 approvals.mode=smart
      - 飞书断连：检查 SSL/EOF 错误，连续3次 → 重启 gateway
      - 配置漂移：对比 profiles/*.yaml 与 hermes config，不一致则重新注入
+     - 查 Agent 日志：对每个 running Agent，hermes kanban log <task_id> | tail -20
+       发现 Unknown skill / permission denied / exit code 等异常 → 立即修复
+     - 发现多个 Agent 同一类错误 → 系统性问题，优先定位根因
 
   3. 根因分析：
      - 查 gateway.error.log 找 crash 模式
