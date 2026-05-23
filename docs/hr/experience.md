@@ -30,3 +30,26 @@
 - v4.3 时 sentiment + strategy-02~06 因缺少 Hermes profile 导致 crash-loop，本次已全部补齐 profile，预计正常调度
 - 18 个 Agent 包含新增的 review 部门 6 人和 backtest-agent
 
+## 2026-05-24 — HR-001 巡检周期 #1：全系统配置文件修复
+
+**背景：** 守护进程启动后执行巡检，发现 17 个 Agent profile YAML 文件存在系统性的模板复制 bug — "经验积累"部分的步骤编号中出现了 7 次重复的 "4." block，步骤 3 缺失，步骤 2 直接跳到 4。
+
+**执行：**
+1. strategy-01.yaml 通过 patch 工具修复
+2. strategy-02~07.yaml 通过 subagent 并行修复
+3. data-agent.yaml（已被之前运行修正）
+4. hr-agent.yaml — write_file 全文件重写
+5. election-committee.yaml — patch 修复
+6. sentiment-agent.yaml — patch 修复
+7. advertising-agent.yaml — patch 修复（rpc error 但已生效）
+8. execution-agent.yaml — patch 修复（rpc error 但已生效）
+9. ceo-agent.yaml — patch 修复（rpc error 但已生效）
+10. 全局修复 "4. 每天回顾 → 5. 每天回顾" 共计 13 处
+
+**系统状态：** 12 Agent 全员 ACTIVE，0 笔交易，全零胜率。系统冷启动中。
+
+**经验：**
+- patch 工具存在 Errno 2 的间歇性 bug（可能是 workspace tmp dir 被删除导致 CWD 失效），但实际修改已生效
+- 对于大段替换，write_file 全局写入比 patch 更可靠
+- 注意到 patch 的错误信息可能误导——返回 Errno 2 时修改仍然成功
+- 多个文件的同一种 bug，先用 subagent 并行修复速度更快

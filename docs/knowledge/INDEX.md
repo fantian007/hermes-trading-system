@@ -14,6 +14,7 @@
 ## System（系统运维）
 
 1. [Longbridge CLI Auth in Hermes Profiles](system/longbridge-auth.md) — Hermes HOME 隔离导致 longbridge token 找不到，symlink 修复方案 (2026-05-24)
+2. [Data-agent Scratch Workspace 路径问题](system/data-agent-workspace-path.md) — 给 data-agent 发任务时相对路径 crash 的问题分析 (2026-05-24)
 
 ## Risk（风控）
 

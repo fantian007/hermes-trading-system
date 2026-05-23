@@ -1,0 +1,15 @@
+{
+  "cycle": 4,
+  "timestamp": "2026-05-23T20:32:48.593Z",
+  "newElectionRounds": "none",
+  "openTrades": [
+    {
+      "trade_id": "ELEC-20260523-2023",
+      "symbol": "AAPL.US",
+      "direction": "LONG",
+      "status": "OPEN",
+      "buy_price": "0.0",
+      "quantity": "5"
+    }
+  ]
+}

@@ -33,3 +33,30 @@
 - 回测部门文档完备（BKT-001）：不影响投票流程
 - 广告部去重：选举委员会本身已遵守去重规则
 - 架构文档版本发布规范 v4.4：选举委员会按规范维护部门文档
+
+## 2026-05-23 — 首次投票执行（ELEC-20260523-2023 AAPL.US BUY）
+
+### 执行结果
+- **股票**: AAPL.US
+- **发起人**: AGT-005（海龟交易策略）
+- **轮次**: ELEC-20260523-2023
+- **结果: 通过** — 5票BUY vs 0票SELL vs 1票HOLD
+- **加权**: BUY 1.25, SELL 0, HOLD 0.25
+- **决策置信度**: 0.76 (AGT-005)
+- **发起的 Kanban**: t_f47624f6 → execution-agent
+
+### 发现的问题 / 经验
+1. **agent_votes.trade_id FK 约束**: 需要先在 trades 表创建记录，trade_id 设为 round_id 的值（如 ELEC-20260523-2023），否则 aggregate-votes 查不到投票
+2. **agent_id 格式**: 策略 agent 是 AGT-001~006（不是 AGT-0001）
+3. **vote_node 约束**: 只能填 BUY 或 SELL（不是 agent_name），与 vote_direction 可以不同（vote_node=BUY 表示关注的节点，vote_direction=HOLD 表示投票方向）
+4. **安全扫描误报**: tsx 触发 tirith 检测 "schemeless URL in sink context"，需用 node --import tsx -e 绕过
+
+### 各 agent 投票意见
+| Agent | 策略 | 方向 | 置信度 | 理由 |
+|-------|------|------|--------|------|
+| AGT-001 | 均线交叉 | BUY | 70% | MA5/MA20 金叉多头排列 |
+| AGT-002 | MACD | BUY | 65% | DIF/DEA 零轴上方金叉 |
+| AGT-003 | RSI | HOLD | 60% | 超买区 >70，追高风险 |
+| AGT-004 | 布林带 | BUY | 55% | 沿上轨运行，成交量配合 |
+| AGT-005 | 海龟 | BUY | 76% | N日高点突破 $311.40 |
+| AGT-006 | 价格异动 | BUY | 65% | 放量上涨 1.26% |

@@ -21,3 +21,13 @@ done
 **验证**: `longbridge auth status` 显示 "valid"，`longbridge quote NVDA.US` 返回报价数据。
 
 **注意**: 创建新 profile 后需要重新执行此操作。
+
+### 2026-05-24 — `--skills longbridge` 在 dispatch 时导致 Unknown skill
+
+**症状**: 所有通过 kanban_create 创建时带了 `--skills longbridge` 的任务（数据请求、选举投票等）在 data-agent / election-committee profile 下 crash 7+ 次，错误日志 "Unknown skill(s): longbridge"。
+
+**根因**: 策略 Agent (strategy-02~07) 创建子任务时自动加 `--skills longbridge`，但 dispatcher 在目标 profile（data-agent, election-committee）下无法加载该 skill——skill 文件虽存在但过 Hermes skill 注册层不可解析。
+
+**可行方案**: 创建任务时不再指定 `--skills longbridge`。而是把 longbridge 的用法直接写进 task body（明确的 CLI 命令和 cd 到项目目录的步骤）。数据请求、投票等任务不需要 longbridge skill——它们需要的是正确的 CWD。
+
+**预防**: review 所有策略 Agent 的创造子任务的代码，去掉 `--skills longbridge`。对需要 longbridge 的任务，改为在 body 中写明 `cd /Users/zys/workspace/hermes-trading-system && npx tsx src/scripts/...`。

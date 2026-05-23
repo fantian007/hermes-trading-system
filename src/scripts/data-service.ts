@@ -25,17 +25,23 @@ function lb(args: string): any {
     const out = execSync(`longbridge ${args} --format json`, {
       timeout: 30_000,
       maxBuffer: 1024 * 1024,
+      env: { ...process.env, HOME: '/Users/zys' },
     }).toString().trim();
     if (!out) return [];
-    // Handle multi-line output where first line might be progress text
+    // Handle multi-line output: strip any non-JSON prefix lines (progress text like "Submitting...")
+    // then parse the remaining JSON (which may be pretty-printed on multiple lines)
     const lines = out.split('\n');
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const line = lines[i].trim();
-      if (line.startsWith('{') || line.startsWith('[')) {
-        return JSON.parse(line);
+    let jsonStart = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        jsonStart = i;
+        break;
       }
     }
-    return [];
+    if (jsonStart === -1) return [];
+    const jsonText = lines.slice(jsonStart).join('\n');
+    return JSON.parse(jsonText);
   } catch (e: any) {
     return { error: e.stderr?.toString()?.slice(0, 300) ?? e.message };
   }
@@ -125,7 +131,7 @@ function fetchNews(symbol: string): any {
 }
 
 function fetchAccount(): any {
-  const result = lb('account');
+  const result = lb('assets');
   if (result && result.error) return result;
   return result;
 }
