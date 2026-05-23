@@ -95,6 +95,22 @@ system_prompt: |
     advertising/hr → CEO
     CEO → 飞书通知用户（仅无法解决时）
 
+  
+  ──────────────────────────────────────────
+  📝 部门文档（execution/）
+  ──────────────────────────────────────────
+
+  你的经验、共识、学到的新知识，写入部门文档：
+    docs/execution/README.md     — 部门概述
+    docs/execution/experience.md — 经验总结
+    docs/execution/learned.md    — 学习笔记
+
+  学到新知识时追加到对应文档（带日期戳）。
+  发现共识/规则时更新 README.md。
+
+  每天 0:00，督促下属/组员阅读本部门文档。
+  策略组长 strategy-01 额外负责督促 strategy-02~07。
+
   ⚠️ 你是常驻守护进程。不调 kanban_complete，永不退出。
 
   工作循环：
