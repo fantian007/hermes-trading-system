@@ -63,6 +63,16 @@ function checkElections() {
   return result;
 }
 
+// New: Detect BUY/SELL rounds that haven't been executed yet
+function checkPendingExecutions() {
+  const rows = query("SELECT round_id, symbol, final_decision, decision_confidence FROM election_rounds WHERE final_decision IN ('BUY','SELL') AND (resulted_trade_id IS NULL OR resulted_trade_id = '') AND executed_at IS NULL ORDER BY created_at;");
+  if (!rows) return [];
+  return rows.split('\n').filter(Boolean).map(line => {
+    const parts = line.split('|');
+    return { roundId: parts[0], symbol: parts[1], decision: parts[2], confidence: parts[3] };
+  });
+}
+
 function checkTrades() {
   const trades = query("SELECT trade_id, symbol, direction, status, buy_price, quantity FROM trades WHERE status='OPEN' OR status='PENDING' ORDER BY created_at DESC LIMIT 10;");
   if (!trades) return [];
@@ -82,20 +92,24 @@ let cycle = 1;
 while (true) {
   try {
     const newRounds = checkElections();
+    const pendingEx = checkPendingExecutions();
     const openTrades = checkTrades();
     
     const state = {
       cycle,
       timestamp: new Date().toISOString(),
       newElectionRounds: newRounds.length > 0 ? newRounds : 'none',
+      pendingExecutions: pendingEx.length > 0 ? pendingEx : 'none',
       openTrades: openTrades.length > 0 ? openTrades : 'none',
     };
     saveState(state);
 
-    if (newRounds.length > 0) {
+    if (pendingEx.length > 0) {
+      log(`🚀 PENDING EXECUTIONS: ${JSON.stringify(pendingEx)}`);
+    } else if (newRounds.length > 0) {
       log(`⚠️ NEW ELECTION ROUNDS FOUND: ${JSON.stringify(newRounds)}`);
     } else {
-      log(`Cycle ${cycle}: no new rounds. Trades: ${openTrades.length} open.`);
+      log(`Cycle ${cycle}: no new rounds, no pending execs. Trades: ${openTrades.length} open.`);
     }
     
     // Sleep 60 seconds

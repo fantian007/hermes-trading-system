@@ -95,6 +95,7 @@ const PREFIX_MAP: Record<string, string> = {
   '执行部门': 'EXE', '执行': 'EXE',
   'HR部门': 'HR', '人力资源': 'HR',
   '广告部门': 'ADV', '广告': 'ADV',
+  '策略部门': 'AGT', '策略': 'AGT',
 };
 
 function getPrefix(deptName: string): string {

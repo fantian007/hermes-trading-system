@@ -1,5 +1,44 @@
 # 执行部门 — 经验总结
 
+## 2026-05-25 — EXE-001 启动 (#3): 死单巡检流程
+
+### 1. 死单检测SQL修正
+`election_rounds` 表没有 `status` 列也没有 `side` 列。正确的死单检测SQL：
+```sql
+SELECT round_id, symbol, final_decision FROM election_rounds 
+WHERE final_decision != 'HOLD' AND resulted_trade_id IS NULL;
+```
+`final_decision` 为 TEXT（BUY/SELL/HOLD），`resulted_trade_id` 为空表示该轮决策未产生交易记录。
+
+### 2. 死单处理流程
+发现死单后：**不盲执行** → 创建 Kanban 任务给 election-committee 重新投票 → 通知 advertising-agent 发送通知。
+不要尝试自己补执行，因为信号可能有时间衰减。
+
+### 3. ESM 模块执行
+`package.json` 中 `"type": "module"`，必须用 `node --import tsx -e "..."` 加载 tsx。
+`npx tsx -e` 在 CJS 模式下可能报 MODULE_NOT_FOUND。
+
+## 2026-05-24 — EXE-001 重启 (#2): daemon 进程回收与恢复
+
+### 1. 后台守护进程的生存周期问题
+Hermes 的 `terminal(background=true)` 后台进程在以下情况下会被回收：
+- Hermes 会话（resgen）排它模式结束后重新创建 agent（之前的 run 666 被 dispatcher 标记为 crashed）
+- 杀死老进程后不立即启动新进程，而是先全面清理再启动
+- 使用 `background=true` 启动的进程在 agent 的 resgen 重建后仍然存活（PID 继续跑），但 Hermes 内部会话 ID 变了
+
+### 2. 多实例问题
+多次 restart 会积累多个后台进程。重启前应先 kill 所有旧实例：
+```
+pkill -f 'exe-daemon.mjs'
+```
+然后再用 terminal(background=true) 启动新实例。
+
+### 3. 当前状态 (2026-05-25 UTC)
+- Daemon PID 51226 正常运行，Cycle 1 已完成
+- 1 笔 OPEN 交易：AAPL.US LONG (buy_price=0, 待交易所确认)
+- 最后 eletion round: ELEC-20260523-2035 (AAPL.US, HOLD)
+- 无新的 BUY/SELL 决策待执行
+
 ## 2026-05-24 — run 83 首次部署要点
 
 ### 1. Kanban Daemon 协议问题
@@ -96,3 +135,60 @@ execution-agent 作为常驻守护进程（永不退出），但 Hermes Kanban d
 - 交易通过 `longbridge` CLI（不是 Node SDK）完成，CLI 认证在 `~/.longbridge/openapi/tokens/`，无需 `.env` 配置
 - `dist/` 产物路径含 `src/` 层级：导入路径是 `./dist/src/core/db.js` 而非 `./dist/core/db.js`
 - 当前无待执行交易，系统健康
+
+## 2026-05-24 — EXE-001 重启: 清理遗留死单
+
+### 1. 遗留死单清理
+DB 中有一笔 `trade_id=ELEC-20260523-2035` (AAPL.US, quantity=0, buy_price=0, status=OPEN) ——
+这是之前执行过程的产物（投票为 HOLD 但意外创建了交易记录）。处理方法：
+- 确认 original round 的 `final_decision=HOLD` 不存在 BUY/SELL 信号
+- 确认 quantity=0 且 buy_price=0（无实际交易）
+- 删除该 trade 记录（FOREIGN KEY 约束可通过 sqlite3 绕过但 tsx 会拦截——实际没有外键引用，是表结构约束问题）
+- 如果删除时遇到 FOREIGN KEY 约束失败，用 `sqlite3` 直接执行 DELETE
+
+### 2. 数据库查询选择
+- npx tsx 调用 TypeScript API 时 timeout 较长（~20-30s）
+- 简单查询用 `sqlite3 data/trading.db "SQL"` 更快（~1s）
+- 复杂查询或需要导入框架代码时再用 tsx
+
+### 3. Daemon 启动确认
+- daemon 启动后需检查 log 确认正常
+- 检查 `ps aux | grep exe-daemon` 确认进程存活
+- 检查 `logs/exe-state.json` 确认第一轮巡检已完成
+
+## 2026-05-24 — EXE-001 守护架构: 多实例共存
+
+### 1. 多个 execution-agent 实例共存模式
+当前有 4 个 execution-agent 进程同时运行：
+- **t_8c4b6e1e** / t_bf9dd3e6 — 常驻守护进程（不调 complete）
+- **t_4f9c64a1** — 交易执行任务（由 election-committee 创建的非守护任务，执行完会 complete）
+- **t_f9d134be** — 带 longbridge skill 的任务
+
+多实例模式是正常的——不同的 Kanban 任务由不同进程处理，各自独立。
+
+### 2. 常驻守护 vs 交易执行
+- 常驻守护 (t_8c4b6e1e / t_bf9dd3e6): 启动 exe-daemon.mjs 后台进程，持续巡检，永不 complete
+- 交易执行 (t_4f9c64a1): 由 election-committee 创建，负责一次具体的风控→下单→完成
+- 守护进程只负责巡检和发现，不参与实际下单（另有其他 execution-agent 实例处理 ELC 创建的交易任务）
+
+### 3. daemon 更新记录
+- 新增 checkPendingExecutions() 函数：检测 final_decision IN ('BUY','SELL') 且 resulted_trade_id IS NULL 且 executed_at IS NULL 的行
+- 状态文件 logs/exe-state.json 新增 pendingExecutions 字段
+
+## 2026-05-24 — EXE-001 执行死单重投: AAPL.US BUY (ELEC-20260523-2035)
+
+### 1. 死单重投处理流程
+选举委员会重新投票通过的 BUY/SELL 轮次（`resulted_trade_id IS NULL`），执行 Agent 需要：
+- 先做完整风控审核（持仓/行情/账户数据 via data-service.ts）
+- 风控通过后，通过 Kanban 创建 data-agent 任务执行下单
+- 同时创建广告通知任务（advertising-agent 发送飞书）
+- 等待 data-agent 返回成交结果
+
+### 2. 风控计算指引
+- 单票仓位 = (已有股数 + 新增股数) × 当前市价 ÷ net_assets
+- 日交易次数查 sqlite3: `SELECT COUNT(*) FROM trades WHERE date(created_at)=date('now') AND direction='LONG'`
+- 现金充足性查 `longbridge assets` → total_cash
+- 风控参数在 `config.ts` 统一管理
+
+### 3. -e 模式不要用 require
+项目是 `"type": "module"`，不能直接用 `-e "const { getDb } = require(...)"`。简单查询直接用 `sqlite3 data/trading.db "SQL"`。

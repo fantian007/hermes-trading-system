@@ -1,6 +1,16 @@
 {
-  "cycle": 9,
-  "timestamp": "2026-05-23T20:37:49.830Z",
+  "cycle": 6,
+  "timestamp": "2026-05-23T20:54:54.470Z",
   "newElectionRounds": "none",
-  "openTrades": "none"
+  "pendingExecutions": "none",
+  "openTrades": [
+    {
+      "trade_id": "TRD-20260524-440",
+      "symbol": "AAPL.US",
+      "direction": "LONG",
+      "status": "OPEN",
+      "buy_price": "0.0",
+      "quantity": "5"
+    }
+  ]
 }

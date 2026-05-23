@@ -41,6 +41,20 @@
 
 ### 下轮关注
 
-1. 是否有弃票 Agent 需要排查（sentiment-agent 等之前 crash-loop 的）
-2. 检查 docs/knowledge/INDEX.md 是否需要更新
-3. 检查 docs/policy.md 和 docs/incident-response.md 是否存在（供 0:00 学习使用）
+| 1. 是否有弃票 Agent 需要排查（sentiment-agent 等之前 crash-loop 的）
+| 2. 检查 docs/knowledge/INDEX.md 是否需要更新
+| 3. 检查 docs/policy.md 和 docs/incident-response.md 是否存在（供 0:00 学习使用）
+
+## 2026-05-24 — HR 守护轮巡 #5 (04:46 CST)
+
+### 系统状态
+- 8 Agent ACTIVE（2→8，审核部门已恢复）
+- 0 笔交易，全零胜率
+- departments 表只有 DPT-005（审核部门），其余部门仍缺失
+- 文档体系完整
+- 冷启动阶段，无操作事项
+
+### 下轮关注
+1. 检查是否有新的 Agent 注册到 DB
+2. 关注 0:00 到达时触发全员学习规章制度
+3. 留意是否有组长或 Agent 提出入职/淘汰需求

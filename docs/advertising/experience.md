@@ -145,3 +145,10 @@
 |4. 必须在 /Users/zys/workspace/hermes-trading-system 目录下运行 `npx tsx src/scripts/send-card.ts`，用 cat | pipe 输入
 |5. 发送后立即更新 /tmp/hermes_ad_last.json 缓存|
 
+
+## 2026-05-24 — send-card.ts 用法纠正
+
+- send-card.ts 从 **stdin** 读取卡 JSON，不是从 `--card` 文件参数
+- 正确用法: `cat card.json | npx tsx src/scripts/send-card.ts`
+- 错误用法: `npx tsx src/scripts/send-card.ts --card card.json` (会导致 "Unexpected end of JSON input")
+- 已更新到 memory：明确写死了"shebang 是误导性"应当用 stdin
