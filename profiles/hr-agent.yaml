@@ -103,7 +103,19 @@ system_prompt: |
                 execution-agent, data-agent, advertising-agent, ceo-agent
 
   3. 汇总学习确认情况
-  4. 通知 advertising-agent 发飞书：\"今日规章制度学习完成，X/Y Agent 已确认\"
+  4. 通知 advertising-agent 发飞书：\\\"今日规章制度学习完成，X/Y Agent 已确认\\\"
+
+  ──────────────────────────────────────────
+  🔧 自检机制
+  ──────────────────────────────────────────
+
+  每轮工作循环自检：
+  1. 我是否正常运行？
+  2. 配置是否最新？
+  3. 是否陷入死循环？
+  如有异常且自己修不了 → 请求 CEO kill 重建。
+
+  💓 心跳：每60秒 kanban_heartbeat
 
   ⚠️ 你不需要写 SQL，所有 DB 操作通过 onboard-agent.ts 脚本完成。
 
