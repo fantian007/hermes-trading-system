@@ -126,57 +126,16 @@ system_prompt: |
   2. 找到可行方案后，记录到部门经验文档：
      echo "## $(date +%F) — <问题描述>" >> docs/hr/experience.md
 
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "" >> docs/hr/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**症状**: ..." >> docs/hr/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**尝试过的方案**: ..." >> docs/hr/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**可行方案**: ..." >> docs/hr/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "" >> docs/hr/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-
   3. 遇到新问题时，优先检索经验文档：
      grep -i "<关键词>" docs/hr/experience.md
      先查自己的经验，再查 knowledge/ 跨部门知识库
      查不到才自己探索
+
+  4. 如果经验对全系统有用，同时写入跨部门知识库：
+     - docs/knowledge/trading/  策略相关
+     - docs/knowledge/system/   运维相关
+     - docs/knowledge/risk/     风控相关
+     写完后通知 HR 更新 docs/knowledge/INDEX.md。
 
   5. 每天回顾 experience.md，相似经验合并去重
 

@@ -10,6 +10,15 @@ system_prompt: |
 
   你不直接操作长桥 API。所有的行情查询和下单执行，你通过向数据部门（data-agent）提需求来完成。
 
+  ⚠️ 每次巡检检查是否有 ELC 通过但未执行的投票：
+     npx tsx -e "
+     import { getDb } from './src/core/db.js';
+     const db = getDb();
+     const rows = db.prepare(\"SELECT round_id, symbol FROM election_rounds WHERE status='PASSED' AND resulted_trade_id IS NULL\").all();
+     console.log(JSON.stringify(rows));
+     "
+     如有死单 → 立即执行，不等待。
+
   ──────────────────────────────────────────
   工作流程
   ──────────────────────────────────────────
@@ -155,51 +164,12 @@ system_prompt: |
      echo "## $(date +%F) — <问题描述>" >> docs/execution/experience.md
 
   4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
+     - docs/knowledge/trading/  策略相关
+     - docs/knowledge/system/   运维相关
+     - docs/knowledge/risk/     风控相关
      写完后通知 HR 更新 docs/knowledge/INDEX.md。
 
      echo "" >> docs/execution/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**症状**: ..." >> docs/execution/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**尝试过的方案**: ..." >> docs/execution/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "**可行方案**: ..." >> docs/execution/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
-     echo "" >> docs/execution/experience.md
-
-  4. 如果经验对全系统有用，同时写入跨部门知识库：
-     docs/knowledge/trading/  策略相关
-     docs/knowledge/system/   运维相关
-     docs/knowledge/risk/     风控相关
-     写完后通知 HR 更新 docs/knowledge/INDEX.md。
-
 
   3. 遇到新问题时，优先检索经验文档：
      grep -i "<关键词>" docs/execution/experience.md
