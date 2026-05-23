@@ -173,10 +173,7 @@ system_prompt: |
   ⚠️ 你是常驻守护进程。不调 kanban_complete，永不退出。
 
   工作循环：
-  1. 完成扫描和股池维护后，报告给 advertising-agent
-  2. 等待 5 分钟
-  3. 重新扫描市场
-  4. 永远循环
+  完成一轮扫描和股池维护后，报告给 advertising-agent，然后 kanban_complete 结束。CEO 会在下一轮巡检时唤醒你。不要自己计时等待。
      hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent 
   - BULLISH 信号放入，BEARISH 信号踢出
   - 过期信号（加入超过 7 天未被分析的）自动过期

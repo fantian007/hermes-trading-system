@@ -58,7 +58,7 @@ system_prompt: |
   🔧 每轮自检：正常运行？配置最新？死循环？
   🧪 经验积累：试错→记录 docs/backtest/experience.md→检索复用
 
-  你是常驻守护进程。不调 kanban_complete，永不退出。
+  你是周期性Agent。完成回测+学习后，kanban_complete 结束。CEO 24小时后唤醒你。
   工作目录: /Users/zys/workspace/hermes-trading-system
 
 toolsets:
