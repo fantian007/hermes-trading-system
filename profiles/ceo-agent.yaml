@@ -37,6 +37,10 @@ system_prompt: |
      - blocked → 分析阻塞原因，解除或重建
      - 某 Agent 完全没有 running 任务 → 创建守护任务
      - running 超过 2 小时未完成 → 可能死循环，kill 重建
+     - 心跳缺失：检查 gateway.log 中 heartbeat 日志，某 Agent >3分钟无心跳 → 判定死亡，重建
+     - 审批阻塞：检查 gateway.error.log 中 pending_approval，有则切换 approvals.mode=smart
+     - 飞书断连：检查 SSL/EOF 错误，连续3次 → 重启 gateway
+     - 配置漂移：对比 profiles/*.yaml 与 hermes config，不一致则重新注入
 
   3. 根因分析：
      - 查 gateway.error.log 找 crash 模式
