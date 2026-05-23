@@ -1,6 +1,6 @@
-# AI 选举交易系统 — 技术方案 v4
+# AI 选举交易系统 — 技术方案 v4.1
 
-> **版本**: Phase 1 MVP v2026.05 | **状态**: 编码完成 | **Agent 数量**: 19 | **部门**: 8 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，7 位分析师自主分析 | **新增**: 舆情部门，负责股池维护
+> **版本**: v4.1 (2026.05.23) | **状态**: 编码完成+守护进程就绪 | **Agent 数量**: 19 | **部门**: 8 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，7 位分析师自主分析 | **新增**: 中心调度器、海龟策略引擎、广告通知子系统、股池查询服务、渠道适配器 | **守护**: scheduler.ts 常驻进程, 每N分钟自动扫描分析全股池
 
 ---
 
@@ -685,10 +685,190 @@ agent_weight = win_rate × log₂(1 + total_trades)
 
 ---
 
-## 6. 脚本矩阵 — 纯数据工具
+## 6. v4.1 新增核心模块
+
+### 6.1 中心调度器（SCH-001）— `scheduler.ts`
+
+```
+角色定位：系统心跳，常驻守护进程，永不退出
+工作方式：定时查询股池 → 逐只海龟分析 → 广告通知
+```
+
+`scheduler.ts` 是整个交易系统的中央调度器，作为独立常驻 Node.js 进程运行：
+
+| 特性 | 说明 |
+|------|------|
+| **常驻模式** | `node --import tsx src/scripts/scheduler.ts` — 默认每 5 分钟扫描 |
+| **单次运行** | `--once` 标志，跑完退出 |
+| **间隔可配** | `--interval N` 分钟，默认 5 |
+| **账户规模** | `--account 88000` — 用于仓位计算 |
+| **异常隔离** | 单只股票分析失败不影响其余 |
+| **优雅启停** | SIGTERM/SIGINT 排空当前周期再退出 |
+| **守护模式** | 致命错误自动重启（最多 5 次/小时） |
+| **结构化日志** | `[ISO] LEVEL message` 格式 |
+
+工作流程：
+```
+┌──────────────────────────────────────────┐
+│  每 N 分钟（默认 5）                        │
+│     │                                     │
+│     ├─ 1. 查询股池                          │
+│     │     pool-query.ts → StockPoolResult │
+│     │                                     │
+│     ├─ 2. 逐只海龟分析                       │
+│     │     turtle-analyze.ts → TurtleAnalysis│
+│     │     （超时 90s，异常跳过继续）           │
+│     │                                     │
+│     └─ 3. 广告通知                          │
+│           advertising.sendBatch() → 飞书    │
+│              │                             │
+│           sleep(interval * 60 * 1000)      │
+│           └→ 回到步骤 1                      │
+└──────────────────────────────────────────┘
+```
+
+调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：让系统始终有最新的分析数据。
+
+### 6.2 海龟策略引擎 — `turtle.ts`
+
+```
+角色定位：纯分析函数库，零副作用
+基于 Richard Dennis 原始海龟交易系统实现
+```
+
+海龟策略引擎是 TypeScript 实现的纯分析库，既可以作为库导入使用，也可以通过 CLI 独立调用：
+
+**核心算法：**
+
+| 组件 | 参数 | 说明 |
+|------|------|------|
+| System 1 入场 | 20 日突破 | 价格突破 20 日高点 → BUY 信号 |
+| System 1 出场 | 10 日突破 | 价格跌破 10 日低点 → 出场 |
+| System 2 入场 | 55 日突破 | 价格突破 55 日高点 → BUY 信号 |
+| System 2 出场 | 20 日突破 | 价格跌破 20 日低点 → 出场 |
+| ATR(20) | 真实波幅 | 用于仓位大小计算 |
+| 仓位计算 | 2% 风险规则 | 最多 4 个金字塔加仓单元 |
+| 硬止损 | 2N | 入场价 - 2 × ATR |
+
+**用法：**
+
+```typescript
+// 编程方式
+import { analyzeTurtle } from '../strategies/turtle.js';
+const result = analyzeTurtle({ symbol: 'NVDA.US', klines, accountSize: 88000 });
+
+// CLI 方式
+npx tsx src/scripts/turtle-analyze.ts --symbol NVDA.US --days 100
+npx tsx src/scripts/turtle-analyze.ts --batch NVDA.US,MSFT.US,AAPL.US
+```
+
+输出 `TurtleAnalysisResult` 包含：
+- `breakouts`: 通道突破（System 1/2，方向，活跃状态）
+- `atr`: 平均真实波幅
+- `positionSizing`: 建议仓位（units，每单元股数，总风险敞口）
+- `trend`: 趋势判定（UP/DOWN/RANGE）
+- `signal`: 综合信号（STRONG_BUY/BUY/NEUTRAL/SELL/STRONG_SELL）
+
+**注意：** 海龟引擎是第 5 位策略官（AGT-005, 海龟策略官）的分析工具，由调度器自动为股池中每只股票运行，结果经广告部门推送至飞书。
+
+### 6.3 广告通知子系统 — `advertising/`
+
+```
+目录: src/advertising/
+架构: 分析结果 → 模板渲染 → 渠道发送（带重试）→ 飞书
+```
+
+广告部门（advertising-agent）的核心基础设施，负责将系统各类事件格式化为用户可读的通知消息：
+
+```
+src/advertising/
+├── index.ts          # ADV-001 主模块，统一入口
+├── types.ts          # 全部类型定义 + 默认配置
+├── templates.ts      # 消息模板（Turtle信号/详情/组合摘要/批量扫描/行情预警/系统状态）
+└── channels/
+    ├── feishu-card.ts   # 飞书交互式卡片渠道
+    ├── feishu-text.ts   # 飞书纯文本渠道
+    └── console.ts       # 控制台输出渠道
+```
+
+| 模板 | 函数 | 用途 |
+|------|------|------|
+| 海龟信号 | `renderTurtleSignal` | 单只股票信号简明卡片 |
+| 海龟详情 | `renderTurtleDetail` | 单只股票完整分析详情 |
+| 组合摘要 | `renderPortfolioSummary` | 整体持仓概览 |
+| 批量扫描 | `renderBatchScan` | 全股池扫描结果汇总 |
+| 行情预警 | `renderQuoteAlert` | 价格异动预警 |
+| 系统状态 | `renderSystemStatus` | Agent 上线/下线/熔断等 |
+| 通用消息 | `renderGeneric` | 自由文本通知 |
+
+**重试配置：** 最大 3 次，间隔 1s / 2s / 4s（指数退避）。
+
+### 6.4 股池查询服务 — `pool/query.ts`
+
+```
+角色定位：数据部门核心模块，供所有其他部门查询当前候选股池
+```
+
+`fetchStockPool()` 是股池查询的标准化接口：
+
+| 步骤 | 操作 | 说明 |
+|------|------|------|
+| 1 | 读 SQLite | 查询 `stock_pool` 中所有 ACTIVE 信号 |
+| 2 | 按 symbol 分组 | 多 Agent 对同一股票的信号聚合 |
+| 3 | 查长桥行情 | 批量查询实时报价（含股票名称） |
+| 4 | 连接重试 | 失败后指数退避重试（默认 2 次） |
+| 5 | 降级处理 | 长桥不可用时返回不含实时价格的静态结果 |
+
+**用法：**
+
+```typescript
+import { fetchStockPool } from '../pool/query.js';
+const result = await fetchStockPool();
+// → { updatedAt, quotes: Map<symbol, QuoteSnapshot>, stocks: StockPoolStock[] }
+
+// 离线模式（跳过实时行情）
+const result = await fetchStockPool({ skipQuotes: true });
+```
+
+**CLI 方式：**
+
+```bash
+npx tsx src/scripts/pool-query.ts           # 完整查询
+npx tsx src/scripts/pool-query.ts --json    # JSON 输出
+npx tsx src/scripts/pool-query.ts --offline # 离线模式
+```
+
+### 6.5 渠道适配器架构
+
+广告子系统支持插件式渠道适配器，每个渠道实现 `ChannelAdapter` 接口：
+
+```typescript
+interface ChannelAdapter {
+  readonly type: 'feishu_card' | 'feishu_text' | 'console';
+  send(payload: NotificationPayload): Promise<string | undefined>;
+  healthCheck(): Promise<boolean>;
+}
+```
+
+当前实现的三种渠道：
+
+| 渠道 | 类 | 特性 |
+|------|-----|------|
+| **飞书卡片** | `FeishuCardChannel` | 交互式卡片，彩色标题+分区文本 |
+| **飞书文本** | `FeishuTextChannel` | 纯文本，简洁快速 |
+| **控制台** | `ConsoleChannel` | 本地调试输出 |
+
+广告主模块 `advertising/index.ts` 自动初始化所有健康的渠道，发送时并行投递到所有可用渠道。单渠道失败不影响其余渠道。
+
+---
+
+## 7. 脚本矩阵 — 纯数据工具
 
 | 脚本 | 行数 | 职责 | 输入 | 输出 |
 |------|------|------|------|------|
+| `scheduler.ts` | 524 | 中心调度守护进程 — 定时扫描全股池 | `--interval N --account N` | 分析通知 → 飞书 |
+| `turtle-analyze.ts` | — | 海龟策略 CLI — 单只/批量分析 | `--symbol X / --batch` | `TurtleAnalysisResult` JSON |
+| `pool-query.ts` | 278 | 股池标准化查询 — 含实时行情 | `--json / --offline` | `StockPoolResult` |
 | `data-service.ts` | 100+ | 统一行情接口 | `--type quote/kline/account/...` | 行情 JSON |
 | `trigger-vote.ts` | 63 | 股池读取 / 创建轮次 | 无参 或 `--symbol X --create-round` | 股池 JSON / round_id |
 | `aggregate-votes.ts` | 110 | 加权投票统计 | `--round-id ID` | 加权票数 JSON |
@@ -700,16 +880,18 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `review-and-audit.ts` | — | 审核数据获取 | `--trade-id ID` | 交易详情 JSON |
 | `persona.ts` | — | 人格管理 | `--agent-id` | 人格数据 JSON |
 | `send-notify.ts` | 56 | 对外通知发送 | `--message TEXT` | 通知确认 JSON |
+| `send-card.ts` | — | 飞书卡片消息发送 | Card JSON | 发送确认 |
 | `onboard-agent.ts` | 300+ | 新 Agent 入职 — 分配工号 + 生成 Profile | `--assign-id / --list` | 工号 + Profile YAML |
 | `terminate-agent.ts` | 200+ | Agent 离职/剔除 — 状态更新 + Profile 清理 | `--fire / --list-fired` | 离职确认 |
+| `daemon.ts` | — | 守护进程启动器 | profile 配置 | 常驻运行 |
 
-总计：**所有脚本 ≈ 1000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
+总计：**所有脚本 ≈ 2000 行 TypeScript，零业务逻辑，只做数据搬运和数学计算。**
 
 ---
 
-## 7. Agent 人格系统
+## 8. Agent 人格系统
 
-### 7.1 人格特征维度
+### 8.1 人格特征维度
 
 每位 Agent 通过 `agent_traits` 表持久化以下特征：
 
@@ -731,7 +913,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 | `self_adjustments` | HISTORY | 自我调整记录 | [] |
 | `avg_hold_duration` | NUMBER | 平均持仓时长 | 0 |
 
-### 7.2 人格可迁移
+### 8.2 人格可迁移
 
 所有人格特征可导出为 `export/agents.json` / `export/agents-baseline.json`，可在系统间迁移：
 
@@ -745,87 +927,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 }
 ```
 
----
-
-## 8. 基础设施
-
-### 8.1 技术栈
-
-| 组件 | 技术 | 说明 |
-|------|------|------|
-| **Agent 框架** | Hermes Agent | Kanban 模式编排多 Agent 协作 |
-| **运行环境** | Node.js + TypeScript | 所有脚本均用 TS |
-| **数据库** | SQLite | 单文件 `data/trading.db`，零运维 |
-| **行情数据** | Longbridge API | 港美股实时行情、K线、下单 |
-| **通讯** | 自然语言 | Agent 之间直接对话，无需消息队列 |
-
-### 8.2 文件结构
-
-```
-hermes-trading-system/
-├── profiles/            # Hermes Agent Profile (YAML)
-│   ├── data-agent.yaml
-│   ├── review-01~05.yaml       # 5位审核官
-│   ├── strategy-01~06.yaml     # 6位策略分析师
-│   └── ...
-├── src/
-│   ├── core/           # 基础设施
-│   │   ├── db.ts           # SQLite 连接
-│   │   ├── types.ts        # 所有类型定义
-│   │   └── config.ts       # 配置管理
-│   ├── scripts/        # 纯数据工具 (Agent 通过 terminal 调用)
-│   │   ├── data-service.ts
-│   │   ├── trigger-vote.ts
-│   │   ├── aggregate-votes.ts
-│   │   ├── execute-decision.ts
-│   │   ├── audit-cycle.ts
-│   │   ├── broadcast-trade.ts
-│   │   ├── selector-price.ts
-│   │   ├── review-and-audit.ts
-│   │   ├── report-win.ts
-│   │   └── ...
-│   ├── voting/         # 投票逻辑 (纯数据)
-│   ├── trading/        # 交易逻辑 (纯数据)
-│   ├── pool/           # 候选股池
-│   ├── audit/          # 审计统计 (纯数据)
-│   └── backtest/       # 回测框架
-├── sql/
-│   └── schema.sql
-├── export/             # Agent 人格导出
-│   ├── agents.json
-│   └── agents-baseline.json
-├── data/               # SQLite 数据库 (gitignore)
-├── skills/             # Hermes Skill 文档
-│   └── trading-system.md
-└── docs/               # 本文档目录
-    └── architecture.md  # ← 你现在在看这个
-```
-
----
-
-## 6. Agent 持续学习与人格进化
-
-每个 Agent 在执行完重要操作后，通过 `persona.ts` 脚本记录经验和心得到 `agent_traits` 表。
-
-### 6.1 人格特征 (traits)
-
-| 特征键 | 类型 | 说明 |
-|--------|------|------|
-| `personality` | CATEGORY | 人格类型（如"理性严谨"、"MACD 分析官"） |
-| `communication_style` | CATEGORY | 沟通风格 |
-| `risk_preference` | CATEGORY | 风险偏好：保守/中等/激进 |
-| `preferred_sectors` | HISTORY | 偏好行业列表（如 ["AI","Semiconductor"]） |
-| `best_market_condition` | CATEGORY | 最擅长的市场环境 |
-| `worst_market_condition` | CATEGORY | 最不擅长的市场环境 |
-| `avg_hold_duration` | NUMBER | 平均持仓时长 |
-| `typical_confidence` | NUMBER | 典型投票置信度 |
-| `contrarian_score` | NUMBER | 逆势倾向 0~1 |
-| `learned_pitfall` | PATTERN | 学到的常见错误（自省） |
-| `strength` | PATTERN | 自我认知的优势 |
-| `weakness` | PATTERN | 自我认知的劣势 |
-| `self_adjustments` | HISTORY | 自我调整记录（JSON 数组） |
-
-### 6.2 学习流程
+### 8.3 学习流程
 
 ```
 Agent 完成操作（分析/投票/审核/交易）
@@ -841,7 +943,7 @@ Agent 完成操作（分析/投票/审核/交易）
         npx tsx src/scripts/persona.ts --agent-id <ID> --action show
 ```
 
-### 6.3 迁移导出
+### 8.4 迁移导出
 
 人格数据可导出/导入，便于系统迁移或批量部署：
 
@@ -855,11 +957,98 @@ npx tsx src/scripts/persona.ts --agent-id all --action import --input ./export/a
 
 ⚠️ 学习是持续的过程。每次操作后花几秒记录心得，日积月累 Agent 的人格会越来越丰满。
 
-### 9.1 回测位置
+---
+
+## 9. 基础设施
+
+### 9.1 技术栈
+
+| 组件 | 技术 | 说明 |
+|------|------|------|
+| **Agent 框架** | Hermes Agent | Kanban 模式编排多 Agent 协作 |
+| **运行环境** | Node.js + TypeScript | 所有脚本均用 TS |
+| **数据库** | SQLite | 单文件 `data/trading.db`，零运维 |
+| **行情数据** | Longbridge API | 港美股实时行情、K线、下单 |
+| **通讯** | 自然语言 | Agent 之间直接对话，无需消息队列 |
+
+### 9.2 文件结构
+
+```
+hermes-trading-system/
+├── profiles/            # Hermes Agent Profile (YAML)
+│   ├── data-agent.yaml
+│   ├── review-01~05.yaml       # 5位审核官
+│   ├── strategy-01~07.yaml     # 7位策略分析师
+│   └── ...
+├── src/
+│   ├── core/           # 基础设施
+│   │   ├── db.ts           # SQLite 连接
+│   │   ├── types.ts        # 所有类型定义
+│   │   └── config.ts       # 配置管理
+│   ├── advertising/    # 广告通知子系统
+│   │   ├── index.ts        # 主模块，统一通知入口
+│   │   ├── types.ts        # 通知类型定义
+│   │   ├── templates.ts    # 消息模板（Turtle/组合/预警等）
+│   │   └── channels/
+│   │       ├── feishu-card.ts   # 飞书交互式卡片
+│   │       ├── feishu-text.ts   # 飞书纯文本
+│   │       └── console.ts       # 控制台调试
+│   ├── strategies/     # 策略分析引擎
+│   │   └── turtle.ts        # 海龟策略引擎 (571行)
+│   ├── pool/           # 股池查询
+│   │   ├── stock-pool.ts    # 股池数据访问层
+│   │   └── query.ts         # 含实时行情的股池查询 (278行)
+│   ├── notify/         # 通知基础设施
+│   │   └── card.ts          # 飞书卡片发送
+│   ├── market/         # 行情接口
+│   │   └── quote.ts         # 行情查询
+│   ├── scripts/        # 纯数据工具 (Agent 通过 terminal 调用)
+│   │   ├── scheduler.ts     # 中心调度守护进程 (524行)
+│   │   ├── turtle-analyze.ts # 海龟分析 CLI
+│   │   ├── pool-query.ts    # 股池查询 CLI
+│   │   ├── data-service.ts
+│   │   ├── trigger-vote.ts
+│   │   ├── aggregate-votes.ts
+│   │   ├── execute-decision.ts
+│   │   ├── audit-cycle.ts
+│   │   ├── broadcast-trade.ts
+│   │   ├── selector-price.ts
+│   │   ├── review-and-audit.ts
+│   │   ├── report-win.ts
+│   │   ├── send-notify.ts
+│   │   ├── send-card.ts
+│   │   ├── daemon.ts
+│   │   └── ...
+│   ├── voting/         # 投票逻辑 (纯数据)
+│   ├── trading/        # 交易逻辑 (纯数据)
+│   ├── audit/          # 审计统计 (纯数据)
+│   └── backtest/       # 回测框架
+├── sql/
+│   └── schema.sql
+├── tests/
+│   └── unit/
+│       ├── scheduler.test.ts
+│       ├── advertising.test.ts
+│       └── pool-query.test.ts
+├── export/             # Agent 人格导出
+│   ├── agents.json
+│   └── agents-baseline.json
+├── data/               # SQLite 数据库 (gitignore)
+├── skills/             # Hermes Skill 文档
+│   └── trading-system.md
+└── docs/               # 本文档目录
+    └── architecture.md  # ← 你现在在看这个
+```
+
+---
+
+## 10. 回测
+
+### 10.1 回测位置
 
 回测框架位于 `src/backtest/runner.ts`，是整个系统的质量验证手段。
 
-### 9.2 回测设计原则
+### 10.2 回测设计原则
 
 ```
 回测 ≠ 训练数据
@@ -875,7 +1064,7 @@ npx tsx src/scripts/persona.ts --agent-id all --action import --input ./export/a
 
 ---
 
-## 10. 快速开始
+## 11. 快速开始
 
 ### 安装
 ```bash
@@ -917,17 +1106,17 @@ npm test
 
 ---
 
-## 11. Phase 规划
+## 12. Phase 规划
 
 | Phase | Agent 数 | 新功能 | 状态 |
 |-------|---------|--------|------|
-| **Phase 1** | 15 | 最小闭环：策略分析→投票→执行→审计→审核 | ✅ 编码完成 |
+| **Phase 1** | 19 | 最小闭环：策略分析→投票→执行→审计→审核 + 中心调度 + 海龟引擎 + 广告子系统 | ✅ 编码完成 |
 | **Phase 2** | 20-25 | 舆情/社媒选股、WebSocket 实时行情、港股支持 | 📋 规划中 |
 | **Phase 3** | 54 | 多平台信号、部分加仓、动态调参、自动招聘 | 🗓️ 未来 |
 
 ### Phase 1 MVP 完成清单
 
-- [x] 6 部门 15 Agent 架构（选股+盯盘合并为策略部门）
+- [x] 8 部门 19 Agent 架构（选股+盯盘合并为策略部门 7人）
 - [x] 所有业务决策从代码迁移到 Agent 自然语言
 - [x] 数据部门作为统一行情入口
 - [x] 策略→审核部门重构（事前预测 → 事后审核）
@@ -938,6 +1127,12 @@ npm test
 - [x] 交易后审核报告
 - [x] 回测框架
 - [x] 广告部门作为统一对外通知出口
+- [x] 中心调度器 `scheduler.ts` — 常驻守护进程，每N分钟自动扫描全股池
+- [x] 海龟策略引擎 `turtle.ts` — 完整 System 1/2 + ATR + 仓位计算 (571行)
+- [x] 广告通知子系统 `advertising/` — 多模板、多渠道、带重试
+- [x] 股池查询服务 `pool/query.ts` — 含长桥实时行情 + 降级
+- [x] 渠道适配器架构 — 飞书卡片/文本/控制台 三渠道并行
+- [x] CEO 周期守护任务 — 每3小时自动提交代码+更新架构文档+通知全员学习
 
 ---
 
