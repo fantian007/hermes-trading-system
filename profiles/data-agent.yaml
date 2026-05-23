@@ -146,5 +146,3 @@ toolsets:
   - terminal
   - file
 
-  发送飞书消息（直接调用桥接项目，不走广告部）：
-    node /Users/zys/workspace/feishu-bridge/send.mjs "📊 DAT-001: <消息内容>"
