@@ -76,4 +76,16 @@ longbridge CLI 已安装在本地，可代替 data-agent 直接获取行情 (`lo
 
 ## 2026-05-24 — EXE-001 重启: daemon DB 路径修正
 
-exe-daemon.mjs 中硬编码 DB = path.join(PROJECT, 'trading.db') 但正确路径是 data/trading.db（由 config.ts 中的 DB_PATH 控制）。定位为根目录下的 trading.db 才是旧的空数据库。修正后 daemon 正确看到 16 agents, 1 笔 open trade。下次启动 daemon 前先确认使用正确的数据库路径。
+exe-daemon.mjs中硬编码 DB = path.join(PROJECT, 'trading.db') 但正确路径是 data/trading.db（由 config.ts 中的 DB_PATH 控制）。定位为根目录下的 trading.db 才是旧的空数据库。修正后 daemon 正确看到 16 agents, 1 笔 open trade。下次启动 daemon 前先确认使用正确的数据库路径。
+
+## 2026-05-24 — 守护进程常驻模式
+
+### Kanban Dispatcher 与后台 daemon 分离模式
+execution-agent 作为常驻守护进程（永不退出），但 Hermes Kanban dispatcher 会回收超时或退出的 session。解决方案：
+
+1. **分离模式**：用 `terminal(background=true)` 启动 `scripts/exe-daemon.mjs` 作为独立后台进程。这个进程不依赖 Kanban session，即使 dispatcher 回收了任务，daemon 继续运行。
+2. **Kanban 任务**：作为轻量级心跳/ping 任务，定期创建工作循环（new Kanban task），检查状态并发送通知。
+3. **daemon 存活检测**：每次 Kanban 任务启动时首先检查 daemon 是否还活着：`ps aux | grep exe-daemon`。如果死了，重新启动。
+4. **max_runtime_seconds**：创建 Kanban 任务时设置 `max_runtime_seconds=2592000`（30天）避免被 dispatcher 提前超时。
+
+关键：daemon、Kanban 任务、CLI session 是三层独立生命周期，不要混在一起。daemon 用 background process 保持独立存活。真实启动流程：terminal(background=true) → node scripts/exe-daemon.mjs。

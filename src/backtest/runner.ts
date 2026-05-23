@@ -264,6 +264,90 @@ function simulateReview(roundId: string, trade: TradeRecord): string {
 
 // ===== 新增指标函数 =====
 
+/**
+ * Diebold-Mariano 统计量（跨 Walk-Forward 窗口）
+ * 原论文: Diebold & Mariano (1995), JBES
+ * HLN 小样本修正: Harvey, Leybourne & Newbold (1997), IJF
+ */
+function dieboldMariano(
+  strategyReturns: number[][],
+  benchmarkReturns: number[][],
+): { dmStat: number; pValue: number; hlnAdjStat: number } {
+  if (strategyReturns.length < 2 || strategyReturns.some(r => r.length < 5)) {
+    return { dmStat: 0, pValue: 1, hlnAdjStat: 0 };
+  }
+  // 每个窗口计算 loss differential (MSE: negative return = worse)
+  const allD: number[] = [];
+  for (let w = 0; w < strategyReturns.length; w++) {
+    const minLen = Math.min(strategyReturns[w].length, benchmarkReturns[w].length);
+    for (let i = 0; i < minLen; i++) {
+      const d = (strategyReturns[w][i] - 0.02 / 252) ** 2 - (benchmarkReturns[w][i] - 0.02 / 252) ** 2;
+      allD.push(d);
+    }
+  }
+  if (allD.length < 10) return { dmStat: 0, pValue: 1, hlnAdjStat: 0 };
+  const meanD = allD.reduce((s, v) => s + v, 0) / allD.length;
+  const T = allD.length;
+  // Newey-West HAC variance (lag = floor(T^(1/4)))
+  const h = Math.max(1, Math.floor(Math.pow(T, 0.25)));
+  let varEst = 0;
+  for (let i = 0; i < T; i++) {
+    const ddm = allD[i] - meanD;
+    varEst += ddm * ddm;
+    for (let j = 1; j <= h && i + j < T; j++) {
+      const wgt = 1 - j / (h + 1);
+      varEst += 2 * wgt * ddm * (allD[i + j] - meanD);
+    }
+  }
+  varEst /= T;
+  if (varEst <= 0) return { dmStat: 0, pValue: 1, hlnAdjStat: 0 };
+  const dmStat = meanD / Math.sqrt(varEst / T);
+  // HLN 小样本修正
+  const hlnAdj = dmStat * Math.sqrt((T + 1 - 2 * h + h * (h - 1) / T) / T);
+  // 近似 p 值（用 norm 近似 t(T-1)）
+  const pVal = (() => {
+    const z = Math.abs(hlnAdj);
+    // 近似标准正态 CDF (Abramowitz & Stegun 26.2.17)
+    const b0 = 0.2316419, b1 = 0.319381530, b2 = -0.356563782, b3 = 1.781477937, b4 = -1.821255978, b5 = 1.330274429;
+    const t = 1 / (1 + b0 * z);
+    const phi = Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+    const cdf = 1 - phi * (b1 * t + b2 * t * t + b3 * t * t * t + b4 * t * t * t * t + b5 * t * t * t * t * t);
+    return Math.max(0, Math.min(1, (1 - cdf) * 2));
+  })();
+  return { dmStat, pValue: pVal, hlnAdjStat };
+}
+
+/**
+ * 滚动 Sharpe 衰减标记
+ * 计算最近 N 天的 Sharpe，和峰值对比
+ */
+function decayFlag(
+  dailyReturns: number[],
+  recentDays: number = 60,
+): { recentSharpe: number; peakSharpe: number; ratio: number; flag: 'OK' | 'DECAYING' | 'DEGRADED' } {
+  if (dailyReturns.length < recentDays + 20) return { recentSharpe: 0, peakSharpe: 0, ratio: 1, flag: 'OK' };
+  const recent = dailyReturns.slice(-recentDays);
+  const older = dailyReturns.slice(0, dailyReturns.length - recentDays);
+  const calcSharpe = (arr: number[]) => {
+    if (arr.length < 5) return 0;
+    const mu = arr.reduce((s, v) => s + v, 0) / arr.length;
+    const std = Math.sqrt(arr.reduce((s, v) => s + (v - mu) ** 2, 0) / (arr.length - 1));
+    return std > 0 ? (mu / std) * Math.sqrt(252) : 0;
+  };
+  const recentSh = calcSharpe(recent);
+  // 对 older 分段取峰值的 80% 分位
+  const chunkSize = recentDays;
+  const chunks: number[] = [];
+  for (let i = 0; i < older.length; i += chunkSize) {
+    const chunk = older.slice(i, i + chunkSize);
+    if (chunk.length > 20) chunks.push(calcSharpe(chunk));
+  }
+  const peakSh = chunks.length > 0 ? chunks.sort((a, b) => b - a)[Math.floor(chunks.length * 0.2)] : calcSharpe(older);
+  const ratio = peakSh !== 0 ? recentSh / peakSh : (recentSh !== 0 ? 0 : 1);
+  const flag = recentSh < 0 ? 'DEGRADED' : ratio < 0.3 ? 'DEGRADED' : ratio < 0.5 ? 'DECAYING' : 'OK';
+  return { recentSharpe: recentSh, peakSharpe: peakSh, ratio, flag };
+}
+
 /** 计算日收益率序列 */
 function calcDailyReturns(equityCurve: number[]): number[] {
   const returns: number[] = [];
