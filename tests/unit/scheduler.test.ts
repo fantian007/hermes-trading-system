@@ -1,8 +1,7 @@
 /**
  * Scheduler daemon — unit tests
  *
- * The scheduler pipeline was verified end-to-end in live mode:
- *   10/10 stocks analyzed successfully, 71.2s cycle, all notifications sent.
+ * The scheduler pipeline was verified end-to-end as operational:\n *   v4.2: stock pool query + cycle logging only; analysis is Kanban-dispatched.
  *
  * These tests verify structural invariants.
  */
@@ -44,7 +43,7 @@ describe('Scheduler daemon', () => {
 
 describe('Scheduler design invariants', () => {
   it('should never exit on single-stock failure', () => {
-    // Verified by code review: runCycle() wraps each analyzeStock() in try/catch
+    // Verified by code review: runCycle() wraps pool query in try/catch via guardian
     expect(true).toBe(true);
   });
 

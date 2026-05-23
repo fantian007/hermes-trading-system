@@ -13,14 +13,23 @@ export class FeishuCardChannel implements ChannelAdapter {
   async send(payload: NotificationPayload): Promise<string | undefined> {
     const { sendCard } = await import('../../notify/card.js');
 
-    const card = {
+    // Build valid Feishu interactive card format
+    // Ref: https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-components
+    const card: Record<string, any> = {
+      config: { wide_screen_mode: true },
       header: {
-        title: payload.title,
-        subtitle: payload.source || '',
+        title: { tag: 'plain_text', content: payload.title },
         template: payload.color,
       },
-      sections: [{ text: payload.body }],
+      elements: [
+        { tag: 'markdown', content: payload.body },
+      ],
     };
+
+    // Add subtitle as a note line if provided
+    if (payload.source) {
+      card.header.subtitle = { tag: 'plain_text', content: payload.source };
+    }
 
     return sendCard(card);
   }
