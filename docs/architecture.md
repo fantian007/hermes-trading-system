@@ -1,6 +1,6 @@
-# AI 选举交易系统 — 技术方案 v4.2
+# AI 选举交易系统 — 技术方案 v4.3
 
-> **版本**: v4.2 (2026.05.23) | **状态**: 编码完成+守护进程就绪 | **Agent 数量**: 19 | **部门**: 8 | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，7 位分析师自主分析 | **新增**: 中心调度器、广告通知子系统、股池查询服务、渠道适配器 | **移除**: 海龟策略 TypeScript 引擎（turtle.ts + turtle-analyze.ts 已删除，AGT-005/RAG-005 仍保留概念性海龟分析框架） | **守护**: scheduler.ts 常驻进程, 每N分钟自动扫描分析全股池
+> **版本**: v4.3 (2026.05.23) | **状态**: 编码完成+守护进程就绪 | **Agent 数量**: 19+ | **部门**: 9 (新增回测部门) | **改造**: 2026.05 — 所有决策完全交给 Agent 自然语言，脚本仅做纯数据读写 | **合并**: 2026.05 — 选股+盯盘合并为策略部门，7 位分析师自主分析 | **v4.3 新增**: CEO巡检诊断系统、知识库体系、回测部门BKT-001、经验积累机制、问题升级链、公司规章制度、部门文档体系、广告部去重、策略Agent数据频次管理、投票并发控制 | **v4.2 移除**: 海龟策略TS引擎 | **v4.1 新增**: 广告通知子系统、股池查询服务、渠道适配器 | **变更**: scheduler.ts 已删除，strategy-01 接管调度
 
 ---
 
@@ -114,6 +114,7 @@ graph TB
 | 6 | **执行部门** | `execution-agent` | — | 1 | 风控判断，向数据部门提需求 | 风控官 |
 | 7 | **HR 部门** | `hr-agent` | — | 1 | 组织人事 | 人力资源/组织发展 |
 | 8 | **广告部门** | `advertising-agent` | — | 1 | 传声筒，有求必应 | 公关/客服 |
+| 9 | **回测部门** | `backtest-agent` | BKT-001 | 1 | 每日回测验证策略质量 | 质量保证 |
 
 ### 3.2 各部门详细职责
 
@@ -325,6 +326,7 @@ HR 部门维护一个"组织架构知识库"，记录每个部门、每个 Agent
 | 执行部门 | execution-agent | execution-agent |
 | HR 部门 | hr-agent | hr-agent |
 | 广告部门 | advertising-agent | advertising-agent |
+| 回测部门 | backtest-agent | backtest-agent |
 
 |组长职责：组长是部门**唯一对外接口**。外部需求先找组长，组长向组员分配任务，组员完成后回复组长，组长汇总后回复给外部对接 Agent。单人部门组长即自己，直接处理所有需求。|
 
@@ -683,51 +685,13 @@ agent_weight = win_rate × log₂(1 + total_trades)
 
 ---
 
-## 6. v4.1 新增核心模块
+## 6. v4.x 新增核心模块
 
-### 6.1 中心调度器（SCH-001）— `scheduler.ts`
+### 6.1 中心调度器（已移除）— ~~`scheduler.ts`~~
 
-```
-角色定位：系统心跳，常驻守护进程，永不退出
-工作方式：定时查询股池 → 触发策略分析 → 广告通知
-```
+> **v4.3 移除**: `scheduler.ts` 已删除（commit f53aea0）。原调度职责由 strategy-01（策略部门组长）通过 scheduler-agent profile 接管。调度循环改为 `scripts/scheduler-loop.sh`，每3分钟执行 `hermes chat -q --yolo`。
 
-`scheduler.ts` 是整个交易系统的中央调度器，作为独立常驻 Node.js 进程运行：
-
-| 特性 | 说明 |
-|------|------|
-| **常驻模式** | `node --import tsx src/scripts/scheduler.ts` — 默认每 5 分钟扫描 |
-| **单次运行** | `--once` 标志，跑完退出 |
-| **间隔可配** | `--interval N` 分钟，默认 5 |
-| **账户规模** | `--account 88000` — 用于仓位计算 |
-| **异常隔离** | 单只股票分析失败不影响其余 |
-| **优雅启停** | SIGTERM/SIGINT 排空当前周期再退出 |
-| **守护模式** | 致命错误自动重启（最多 5 次/小时） |
-| **结构化日志** | `[ISO] LEVEL message` 格式 |
-
-工作流程：
-```
-┌──────────────────────────────────────────┐
-│  每 N 分钟（默认 5）                        │
-│     │                                     │
-│     ├─ 1. 查询股池                          │
-│     │     pool-query.ts → StockPoolResult │
-│     │                                     │
-│     ├─ 2. 逐只股票分析                       │
-│     │     （由各策略 Agent 通过 Kanban 任务   │
-│     │      异步执行，调度器仅触发）            │
-│     │                                     │
-│     └─ 3. 广告通知                          │
-│           advertising.sendBatch() → 飞书    │
-│              │                             │
-│           sleep(interval * 60 * 1000)      │
-│           └→ 回到步骤 1                      │
-└──────────────────────────────────────────┘
-```
-
-调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：查询股池、触发策略分析、推动通知。
-
-> ✅ **v4.2 已修复**: 海龟策略 TypeScript 引擎（`turtle.ts` + `turtle-analyze.ts`）已删除。调度器不再直接调用海龟分析 CLI，改为通过 Kanban 任务触发各策略 Agent 异步分析。`scheduler.ts` 中 `analyzeStock()` 函数（含 `turtle-analyze.ts` 引用）、`sendAdNotify()` 和 `sendCycleSummary()` 已移除。
+原设计：中心调度器作为常驻 Node.js 守护进程，定时扫描全股池、触发策略分析、推送广告通知。该流程现在由 strategy-01 Agent 通过 Kanban 任务驱动，不再依赖独立 TypeScript 进程。
 
 ### 6.2 海龟策略引擎（已移除）— ~~`turtle.ts`~~
 
@@ -826,11 +790,111 @@ interface ChannelAdapter {
 
 ---
 
+## 6A. v4.3 新增核心模块
+
+### 6A.1 CEO 巡检诊断系统
+
+CEO（ceo-agent）每 5 分钟执行一次全系统巡检，诊断 7 项指标：
+
+| 诊断项 | 说明 |
+|--------|------|
+| 心跳检测 | 检查所有 Agent 是否响应 Kanban 任务 |
+| 审批队列 | 检查是否有积压的投票轮次未处理 |
+| 飞书连通 | 验证飞书通知链路正常 |
+| 配置漂移 | 检测 Profile YAML 是否有意外变更 |
+| 进程存活性 | 确认关键守护进程是否运行 |
+| ELC 并发 | 检查选举委员会是否超负荷 |
+| 广告队列 | 检查广告推送队列是否积压 |
+
+发现异常时自动尝试自愈（重建 Kanban 任务、重启 Agent Profile），无法自愈时立即通过飞书通知用户。
+
+> 实现：`scripts/ceo-inspect.sh` + ceo-agent Kanban 周期任务。巡检频率 5 分钟（commit 578c398 从 1 小时缩短至 5 分钟）。
+
+### 6A.2 知识库体系
+
+每位 Agent 具备持久化的经验知识库，部门独立维护：
+
+```
+src/knowledge/
+├── ceo/        # CEO 经验库
+├── strategy/   # 策略部门知识库（每人一个文件）
+├── review/     # 审核部门知识库
+├── hr/         # HR 知识库
+└── advertising/# 广告部知识库
+```
+
+**经验积累机制**（commit 36c1c3d）：
+```
+试错 → 记录 → 检索 → 复用
+  │       │       │
+  │       └→ 写入知识库文件（markdown）
+  └→ Agent 通过 session_search 检索历史经验
+          └→ 在新场景中复用学到的教训
+```
+
+Agent 在每次操作后反思经验，写入部门知识库。下次遇到类似场景时通过 session_search 调取历史经验。
+
+### 6A.3 回测部门 — BKT-001
+
+**v4.3 新增第 9 部门**，工号 BKT-001：
+
+| 属性 | 值 |
+|------|-----|
+| 工号 | BKT-001 |
+| Profile | backtest-agent |
+| 角色 | 每日回测 + 学习 + 报告 CEO |
+| 工作方式 | 每日执行 `src/backtest/runner.ts` 回测框架，验证策略质量 |
+
+回测结果报告给 CEO，用于策略评估和 Agent 绩效判定。回测不修改 Agent 人格，仅作为质量验证手段。
+
+### 6A.4 问题升级链
+
+```
+Agent 发现问题
+    ↓
+自己尝试解决
+    ↓ 无法解决
+找本部门组长
+    ↓ 组长也无法解决
+上报 CEO
+    ↓ CEO 自主决策
+  ├→ 能修：自愈修复（重启/重建/调参）
+  └→ 不能修：飞书通知用户
+```
+
+CEO 自主决策，不请示用户。只有 CEO 确实无法解决时才通知用户。
+
+### 6A.5 公司规章制度
+
+**v4.3 新增** `docs/rules.md` — 公司规章制度 v1.0：
+
+- 核心价值观「诚实守信」写入所有 Agent prompt
+- HR 每日 0 点组织全员学习公司规章制度
+- 部门组长每周维护文档：清理过时内容、写周报
+- 部门文档体系：每个部门维护自己的 `docs/dept-<name>.md`
+
+### 6A.6 广告部去重机制
+
+广告部（advertising-agent）新增去重逻辑：无新数据时不重复推送飞书消息。避免信息洪流。
+
+### 6A.7 策略 Agent 数据频次管理
+
+策略 Agent 自主管理向 data-agent 请求数据的频率和缓存策略，避免不必要的数据拉取，减轻数据部门负担。
+
+### 6A.8 投票并发控制
+
+策略 Agent 发起投票前需检查选举委员会（ELC）是否忙碌。避免并发投票轮次导致 ELC 崩溃（曾出现 3 个并发任务抢进程导致 36+ 次 crash，commit 2e22a7b 修复）。
+
+### 6A.9 CEO 每日进化
+
+CEO 每日督促全员搜索优质资源（新策略论文、市场分析、技术文章）来优化自身 prompt 和分析框架。结果写入知识库。
+
+---
+
 ## 7. 脚本矩阵 — 纯数据工具
 
 | 脚本 | 行数 | 职责 | 输入 | 输出 |
 |------|------|------|------|------|
-| `scheduler.ts` | 524 | 中心调度守护进程 — 定时扫描全股池 | `--interval N --account N` | 分析通知 → 飞书 |
 | `pool-query.ts` | 278 | 股池标准化查询 — 含实时行情 | `--json / --offline` | `StockPoolResult` |
 | `data-service.ts` | 100+ | 统一行情接口 | `--type quote/kline/account/...` | 行情 JSON |
 | `trigger-vote.ts` | 63 | 股池读取 / 创建轮次 | 无参 或 `--symbol X --create-round` | 股池 JSON / round_id |
@@ -948,6 +1012,12 @@ hermes-trading-system/
 │   │   ├── db.ts           # SQLite 连接
 │   │   ├── types.ts        # 所有类型定义
 │   │   └── config.ts       # 配置管理
+│   ├── knowledge/      # 知识库体系 (v4.3)
+│   │   ├── ceo/            # CEO 经验库
+│   │   ├── strategy/       # 策略部门知识库
+│   │   ├── review/         # 审核部门知识库
+│   │   ├── hr/             # HR 知识库
+│   │   └── advertising/    # 广告部知识库
 │   ├── advertising/    # 广告通知子系统
 │   │   ├── index.ts        # 主模块，统一通知入口
 │   │   ├── types.ts        # 通知类型定义
@@ -966,7 +1036,6 @@ hermes-trading-system/
 │   ├── market/         # 行情接口
 │   │   └── quote.ts         # 行情查询
 │   ├── scripts/        # 纯数据工具 (Agent 通过 terminal 调用)
-│   │   ├── scheduler.ts     # 中心调度守护进程 (524行)
 │   │   ├── pool-query.ts    # 股池查询 CLI
 │   │   ├── data-service.ts
 │   │   ├── trigger-vote.ts
@@ -998,8 +1067,11 @@ hermes-trading-system/
 ├── data/               # SQLite 数据库 (gitignore)
 ├── skills/             # Hermes Skill 文档
 │   └── trading-system.md
-└── docs/               # 本文档目录
-    └── architecture.md  # ← 你现在在看这个
+├── docs/               # 本文档目录
+│   ├── architecture.md  # ← 技术方案（本文档）
+│   ├── rules.md         # 公司规章制度 v1.0
+│   ├── exception-handling.md  # 系统异常处理手册
+│   └── dept-*.md        # 各部门文档
 ```
 
 ---
@@ -1095,6 +1167,15 @@ npm test
 - [x] 股池查询服务 `pool/query.ts` — 含长桥实时行情 + 降级
 - [x] 渠道适配器架构 — 飞书卡片/文本/控制台 三渠道并行
 - [x] CEO 周期守护任务 — 每3小时自动提交代码+更新架构文档+通知全员学习
+- [x] CEO 巡检诊断系统 — 每5分钟7项指标自检+自愈
+- [x] 知识库体系 — 5部门知识库 + 经验积累（试错→记录→检索→复用）
+- [x] 回测部门 BKT-001 — 每日回测+学习+报告CEO
+- [x] 问题升级链 — Agent→组长→CEO，CEO自主决策
+- [x] 公司规章制度 v1.0 — 核心价值观「诚实守信」写入所有Agent
+- [x] 广告部去重 — 无新数据不重复推飞书
+- [x] 策略Agent数据频次管理 — 自主管理缓存策略
+- [x] 投票并发控制 — 发起前检查ELC忙碌状态
+- [x] CEO每日进化 — 督促全员优化自身
 
 ---
 
