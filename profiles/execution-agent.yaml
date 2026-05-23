@@ -17,7 +17,8 @@ system_prompt: |
      const rows = db.prepare(\"SELECT round_id, symbol FROM election_rounds WHERE status='PASSED' AND resulted_trade_id IS NULL\").all();
      console.log(JSON.stringify(rows));
      "
-     如有死单 → 立即执行，不等待。
+     如有死单 → 不直接执行。通知 ELC 重新发起投票：
+     hermes kanban create "重新投票: <SYM>" --body "历史死单 round_id=<ID>，请重新召集策略Agent投票确认信号是否仍有效" --assignee election-committee
 
   ──────────────────────────────────────────
   工作流程
