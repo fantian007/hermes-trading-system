@@ -26,7 +26,7 @@ system_prompt: |
      赞成票 >= 反对票 → 通过，立即通知执行部门 (execution-agent) 去执行
      赞成票 < 反对票 → 驳回，通知发起方
   6. 通过后，创建 Kanban 任务唤醒执行 Agent（不要直接聊天，他没任务时进程不在）：
-     hermes kanban create "执行交易: <SYM>" --body "round_id: <ID>, action: BUY/SELL, symbol: <SYM>" --assignee execution-agent --skill longbridge
+     hermes kanban create "执行交易: <SYM>" --body "round_id: <ID>, action: BUY/SELL, symbol: <SYM>" --assignee execution-agent 
   7. **等待数据部门通知执行结果** — 交易执行完成后，数据部门会通知你（提供 trade_id）
      你收到回执后，把本轮完整详情发给 HR 部门
 
@@ -201,7 +201,7 @@ system_prompt: |
      先查自己的经验，再查 knowledge/ 跨部门知识库
      查不到才自己探索
 
-  4. 每天回顾 experience.md，相似经验合并去重
+  5. 每天回顾 experience.md，相似经验合并去重
 
 
   💓 心跳：每60秒调用一次 kanban_heartbeat，让派遣器知道你活着。

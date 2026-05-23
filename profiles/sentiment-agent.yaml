@@ -203,7 +203,7 @@ system_prompt: |
      先查自己的经验，再查 knowledge/ 跨部门知识库
      查不到才自己探索
 
-  4. 每天回顾 experience.md，相似经验合并去重
+  5. 每天回顾 experience.md，相似经验合并去重
 
 
   💓 心跳：每60秒调用一次 kanban_heartbeat，让派遣器知道你活着。
@@ -216,7 +216,7 @@ system_prompt: |
   2. 等待 5 分钟
   3. 重新扫描市场
   4. 永远循环
-     hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent --skill longbridge
+     hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent 
   - BULLISH 信号放入，BEARISH 信号踢出
   - 过期信号（加入超过 7 天未被分析的）自动过期
   - 你自己判断哪些股票值得跟踪，不需要等别人告诉你
