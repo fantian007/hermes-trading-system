@@ -713,9 +713,9 @@ agent_weight = win_rate × log₂(1 + total_trades)
 │     ├─ 1. 查询股池                          │
 │     │     pool-query.ts → StockPoolResult │
 │     │                                     │
-│     ├─ 2. 逐只海龟分析                       │
-│     │     turtle-analyze.ts → TurtleAnalysis│
-│     │     （超时 90s，异常跳过继续）           │
+│     ├─ 2. 逐只股票分析                       │
+│     │     （由各策略 Agent 通过 Kanban 任务   │
+│     │      异步执行，调度器仅触发）            │
 │     │                                     │
 │     └─ 3. 广告通知                          │
 │           advertising.sendBatch() → 飞书    │
@@ -725,7 +725,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 └──────────────────────────────────────────┘
 ```
 
-调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：让系统始终有最新的分析数据。
+调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：查询股池、触发策略分析、推动通知。\n\n> ⚠️ **v4.2 变更**: 海龟策略 TypeScript 引擎（`turtle.ts` + `turtle-analyze.ts`）已删除。调度器不再直接调用海龟分析 CLI，改为通过 Kanban 任务触发各策略 Agent 异步分析。`scheduler.ts` 第242行仍引用已删除的 `turtle-analyze.ts`，**需要更新否则运行时会崩溃**。
 
 ### 6.2 海龟策略引擎 — `turtle.ts`
 
