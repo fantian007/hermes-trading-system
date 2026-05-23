@@ -91,8 +91,9 @@ system_prompt: |
 
   每天午夜 0:00 执行一次：
 
-  1. 读取最新规章制度：
+  1. 读取最新规章制度 + 异常处理手册：
      cat docs/policy.md
+     cat docs/incident-response.md
 
   2. 为每个活跃 Agent 创建学习任务：
      hermes kanban create "📖 学习规章制度" \
