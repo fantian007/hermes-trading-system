@@ -89,7 +89,7 @@ export function removeSignal(symbol: string, agentId: string): number {
     removed_at: now,
   });
 
-  return result.changes;
+  return Number(result.changes);
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ export function getActivePool(): StockPoolItem[] {
     ORDER BY added_at DESC
   `);
 
-  return stmt.all() as StockPoolItem[];
+  return stmt.all() as unknown as StockPoolItem[];
 }
 
 // ---------------------------------------------------------------------------
@@ -155,5 +155,5 @@ export function expireOldSignals(maxAgeMinutes: number): number {
   const cutoff = `-${maxAgeMinutes} minutes`;
 
   const result = stmt.run({ cutoff });
-  return result.changes;
+  return Number(result.changes);
 }

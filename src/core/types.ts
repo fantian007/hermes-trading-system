@@ -225,6 +225,43 @@ export interface WinReportRequest {
   };
 }
 
+// ===== Stock Pool Types =====
+
+export interface StockPoolStock {
+  symbol: string;
+  name: string | null;          // 股票名称（如 "NVIDIA CORP"）
+  signal_count: number;
+  aggregate: {
+    bullish_signals: number;
+    bearish_signals: number;
+    total_strength: number;
+    avg_strength: number;
+  };
+  signals: Array<{
+    agent_id: string;
+    signal_type: string;
+    strength: number;
+    source: string;
+    reason: string;
+    added_at: string;
+  }>;
+  quote?: {
+    last: number;
+    change_pct: number;
+    volume: number;
+    prev_close: number;
+    high: number;
+    low: number;
+  };
+}
+
+export interface StockPoolResult {
+  pool_size: number;
+  unique_symbols: string[];
+  stocks: StockPoolStock[];
+  generated_at: string;
+}
+
 export interface StockSignal {
   symbol: string;
   signal_type: SignalType;

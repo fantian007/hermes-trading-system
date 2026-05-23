@@ -8,13 +8,15 @@
  * 用法：
  *   npx tsx src/scripts/data-service.ts --type quote --symbol NVDA.US
  *   npx tsx src/scripts/data-service.ts --type kline --symbol AAPL.US --days 30
+ *   npx tsx src/scripts/data-service.ts --type news --symbol NVDA.US
  *   npx tsx src/scripts/data-service.ts --type account
  *   npx tsx src/scripts/data-service.ts --type watchlist
  *   npx tsx src/scripts/data-service.ts --type positions
+ *   npx tsx src/scripts/data-service.ts --type pool
  */
 
 import { execSync } from 'node:child_process';
-import { getActivePool } from '../pool/stock-pool.js';
+import { fetchStockPool } from '../pool/query.js';
 
 // ===== Longbridge CLI helper =====
 
@@ -37,174 +39,6 @@ function lb(args: string): any {
   } catch (e: any) {
     return { error: e.stderr?.toString()?.slice(0, 300) ?? e.message };
   }
-}
-
-// ===== Retry helper =====
-
-/**
- * 带指数退避的重试包装器
- *
- * 对长桥 CLI 调用进行重试，处理偶发网络故障。
- * 最多重试 maxRetries 次，每次间隔翻倍。
- */
-function withRetry<T>(fn: () => T, maxRetries = 3, baseDelayMs = 1000): T {
-  let lastError: any;
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return fn();
-    } catch (e: any) {
-      lastError = e;
-      if (attempt < maxRetries) {
-        const delay = baseDelayMs * Math.pow(2, attempt - 1);
-        // Simple sync sleep via busy-wait (acceptable for sub-second delays in CLI tools)
-        const end = Date.now() + delay;
-        while (Date.now() < end) { /* spin */ }
-      }
-    }
-  }
-  throw lastError;
-}
-
-// ===== Stock pool query =====
-
-interface StockPoolStock {
-  symbol: string;
-  signal_count: number;
-  aggregate: {
-    bullish_signals: number;
-    bearish_signals: number;
-    total_strength: number;
-    avg_strength: number;
-  };
-  signals: Array<{
-    agent_id: string;
-    signal_type: string;
-    strength: number;
-    source: string;
-    reason: string;
-    added_at: string;
-  }>;
-  quote?: {
-    last: number;
-    change_pct: number;
-    volume: number;
-    prev_close: number;
-    high: number;
-    low: number;
-  };
-}
-
-interface StockPoolResult {
-  pool_size: number;
-  unique_symbols: string[];
-  stocks: StockPoolStock[];
-  generated_at: string;
-}
-
-/**
- * 从 SQLite 股池 + 长桥实时行情组合生成标准化股票列表
- *
- * 流程：
- *   1. 从 SQLite 读取 ACTIVE 状态信号
- *   2. 按 symbol 聚合（同一股票可能有多个 Agent 信号）
- *   3. 批量查询长桥实时行情（含重试）
- *   4. 返回标准化结构
- *
- * 空池返回 pool_size=0，不报错。
- */
-function fetchStockPool(): StockPoolResult {
-  // 1. 读取股池（带重试，SQLite 偶发 busy）
-  const poolItems = withRetry(() => getActivePool(), 3, 500);
-
-  // 2. 空池处理
-  if (poolItems.length === 0) {
-    return {
-      pool_size: 0,
-      unique_symbols: [],
-      stocks: [],
-      generated_at: new Date().toISOString(),
-    };
-  }
-
-  // 3. 按 symbol 分组聚合
-  const symbolMap = new Map<string, StockPoolStock>();
-
-  for (const item of poolItems) {
-    const s = symbolMap.get(item.symbol);
-    if (s) {
-      s.signal_count++;
-      s.signals.push({
-        agent_id: item.agent_id,
-        signal_type: item.signal_type,
-        strength: item.strength,
-        source: item.source,
-        reason: item.reason,
-        added_at: item.added_at,
-      });
-      if (item.signal_type === 'BULLISH') s.aggregate.bullish_signals++;
-      else s.aggregate.bearish_signals++;
-      s.aggregate.total_strength += item.strength;
-    } else {
-      const isBullish = item.signal_type === 'BULLISH';
-      symbolMap.set(item.symbol, {
-        symbol: item.symbol,
-        signal_count: 1,
-        aggregate: {
-          bullish_signals: isBullish ? 1 : 0,
-          bearish_signals: isBullish ? 0 : 1,
-          total_strength: item.strength,
-          avg_strength: 0, // computed below
-        },
-        signals: [{
-          agent_id: item.agent_id,
-          signal_type: item.signal_type,
-          strength: item.strength,
-          source: item.source,
-          reason: item.reason,
-          added_at: item.added_at,
-        }],
-      });
-    }
-  }
-
-  // 计算平均强度
-  for (const [, stock] of symbolMap) {
-    stock.aggregate.avg_strength = parseFloat(
-      (stock.aggregate.total_strength / stock.signal_count).toFixed(2),
-    );
-  }
-
-  // 4. 批量查询行情（按 symbol 排序后分批，每批最多 10 只）
-  const symbols = [...symbolMap.keys()].sort();
-  const BATCH_SIZE = 10;
-
-  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
-    const batch = symbols.slice(i, i + BATCH_SIZE);
-    const quoteResult = withRetry(() => lb(`quote ${batch.join(' ')}`), 3, 1000);
-
-    if (quoteResult && !quoteResult.error && Array.isArray(quoteResult)) {
-      for (const q of quoteResult) {
-        const stock = symbolMap.get(q.symbol);
-        if (stock) {
-          stock.quote = {
-            last: parseFloat(q.last ?? '0'),
-            change_pct: parseFloat(q.change_percentage ?? '0'),
-            volume: parseFloat(q.volume ?? '0'),
-            prev_close: parseFloat(q.prev_close ?? '0'),
-            high: parseFloat(q.high ?? '0'),
-            low: parseFloat(q.low ?? '0'),
-          };
-        }
-      }
-    }
-  }
-
-  return {
-    pool_size: poolItems.length,
-    unique_symbols: symbols,
-    stocks: [...symbolMap.values()],
-    generated_at: new Date().toISOString(),
-  };
 }
 
 // ===== Data fetching functions =====
