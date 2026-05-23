@@ -689,7 +689,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 
 ```
 角色定位：系统心跳，常驻守护进程，永不退出
-工作方式：定时查询股池 → 逐只海龟分析 → 广告通知
+工作方式：定时查询股池 → 触发策略分析 → 广告通知
 ```
 
 `scheduler.ts` 是整个交易系统的中央调度器，作为独立常驻 Node.js 进程运行：
@@ -725,49 +725,15 @@ agent_weight = win_rate × log₂(1 + total_trades)
 └──────────────────────────────────────────┘
 ```
 
-调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：查询股池、触发策略分析、推动通知。\n\n> ⚠️ **v4.2 变更**: 海龟策略 TypeScript 引擎（`turtle.ts` + `turtle-analyze.ts`）已删除。调度器不再直接调用海龟分析 CLI，改为通过 Kanban 任务触发各策略 Agent 异步分析。`scheduler.ts` 第242行仍引用已删除的 `turtle-analyze.ts`，**需要更新否则运行时会崩溃**。
+调度器不投票、不交易、不做策略决策。它的唯一职责是**驱动信息流**：查询股池、触发策略分析、推动通知。
 
-### 6.2 海龟策略引擎 — `turtle.ts`
+> ⚠️ **v4.2 变更**: 海龟策略 TypeScript 引擎（`turtle.ts` + `turtle-analyze.ts`）已删除。调度器不再直接调用海龟分析 CLI，改为通过 Kanban 任务触发各策略 Agent 异步分析。`scheduler.ts` 第242行仍引用已删除的 `turtle-analyze.ts`，**需要更新否则运行时会崩溃**。
 
-```
-角色定位：纯分析函数库，零副作用
-基于 Richard Dennis 原始海龟交易系统实现
-```
+### 6.2 海龟策略引擎（已移除）— ~~`turtle.ts`~~
 
-海龟策略引擎是 TypeScript 实现的纯分析库，既可以作为库导入使用，也可以通过 CLI 独立调用：
+> **v4.2 移除**: 海龟策略 TypeScript 引擎（`src/strategies/turtle.ts`，571行）和 CLI 入口（`src/scripts/turtle-analyze.ts`，162行）已于 v4.2 删除。原代码实现了完整 System 1/2 突破检测、ATR 计算和仓位建议，但其核心分析能力已由 AGT-005（海龟策略官）在 Agent 层面通过自然语言自主完成，无需独立代码引擎。
 
-**核心算法：**
-
-| 组件 | 参数 | 说明 |
-|------|------|------|
-| System 1 入场 | 20 日突破 | 价格突破 20 日高点 → BUY 信号 |
-| System 1 出场 | 10 日突破 | 价格跌破 10 日低点 → 出场 |
-| System 2 入场 | 55 日突破 | 价格突破 55 日高点 → BUY 信号 |
-| System 2 出场 | 20 日突破 | 价格跌破 20 日低点 → 出场 |
-| ATR(20) | 真实波幅 | 用于仓位大小计算 |
-| 仓位计算 | 2% 风险规则 | 最多 4 个金字塔加仓单元 |
-| 硬止损 | 2N | 入场价 - 2 × ATR |
-
-**用法：**
-
-```typescript
-// 编程方式
-import { analyzeTurtle } from '../strategies/turtle.js';
-const result = analyzeTurtle({ symbol: 'NVDA.US', klines, accountSize: 88000 });
-
-// CLI 方式
-npx tsx src/scripts/turtle-analyze.ts --symbol NVDA.US --days 100
-npx tsx src/scripts/turtle-analyze.ts --batch NVDA.US,MSFT.US,AAPL.US
-```
-
-输出 `TurtleAnalysisResult` 包含：
-- `breakouts`: 通道突破（System 1/2，方向，活跃状态）
-- `atr`: 平均真实波幅
-- `positionSizing`: 建议仓位（units，每单元股数，总风险敞口）
-- `trend`: 趋势判定（UP/DOWN/RANGE）
-- `signal`: 综合信号（STRONG_BUY/BUY/NEUTRAL/SELL/STRONG_SELL）
-
-**注意：** 海龟引擎是第 5 位策略官（AGT-005, 海龟策略官）的分析工具，由调度器自动为股池中每只股票运行，结果经广告部门推送至飞书。
+策略部门 AGT-005（海龟策略官）和审核部门 RAG-005（海龟审核官）保留，继续使用海龟交易法则框架进行自主分析和审核。参见第 3.2 节策略/审核部门表格。
 
 ### 6.3 广告通知子系统 — `advertising/`
 
@@ -865,7 +831,6 @@ interface ChannelAdapter {
 | 脚本 | 行数 | 职责 | 输入 | 输出 |
 |------|------|------|------|------|
 | `scheduler.ts` | 524 | 中心调度守护进程 — 定时扫描全股池 | `--interval N --account N` | 分析通知 → 飞书 |
-| `turtle-analyze.ts` | — | 海龟策略 CLI — 单只/批量分析 | `--symbol X / --batch` | `TurtleAnalysisResult` JSON |
 | `pool-query.ts` | 278 | 股池标准化查询 — 含实时行情 | `--json / --offline` | `StockPoolResult` |
 | `data-service.ts` | 100+ | 统一行情接口 | `--type quote/kline/account/...` | 行情 JSON |
 | `trigger-vote.ts` | 63 | 股池读取 / 创建轮次 | 无参 或 `--symbol X --create-round` | 股池 JSON / round_id |
@@ -992,7 +957,7 @@ hermes-trading-system/
 │   │       ├── feishu-text.ts   # 飞书纯文本
 │   │       └── console.ts       # 控制台调试
 │   ├── strategies/     # 策略分析引擎
-│   │   └── turtle.ts        # 海龟策略引擎 (571行)
+│   │   └── (已移除 turtle.ts — v4.2)
 │   ├── pool/           # 股池查询
 │   │   ├── stock-pool.ts    # 股池数据访问层
 │   │   └── query.ts         # 含实时行情的股池查询 (278行)
@@ -1002,7 +967,6 @@ hermes-trading-system/
 │   │   └── quote.ts         # 行情查询
 │   ├── scripts/        # 纯数据工具 (Agent 通过 terminal 调用)
 │   │   ├── scheduler.ts     # 中心调度守护进程 (524行)
-│   │   ├── turtle-analyze.ts # 海龟分析 CLI
 │   │   ├── pool-query.ts    # 股池查询 CLI
 │   │   ├── data-service.ts
 │   │   ├── trigger-vote.ts
@@ -1108,7 +1072,7 @@ npm test
 
 | Phase | Agent 数 | 新功能 | 状态 |
 |-------|---------|--------|------|
-| **Phase 1** | 19 | 最小闭环：策略分析→投票→执行→审计→审核 + 中心调度 + 海龟引擎 + 广告子系统 | ✅ 编码完成 |
+| **Phase 1** | 19 | 最小闭环：策略分析→投票→执行→审计→审核 + 中心调度 + 广告子系统 | ✅ 编码完成 |
 | **Phase 2** | 20-25 | 舆情/社媒选股、WebSocket 实时行情、港股支持 | 📋 规划中 |
 | **Phase 3** | 54 | 多平台信号、部分加仓、动态调参、自动招聘 | 🗓️ 未来 |
 
@@ -1126,7 +1090,7 @@ npm test
 - [x] 回测框架
 - [x] 广告部门作为统一对外通知出口
 - [x] 中心调度器 `scheduler.ts` — 常驻守护进程，每N分钟自动扫描全股池
-- [x] 海龟策略引擎 `turtle.ts` — 完整 System 1/2 + ATR + 仓位计算 (571行)
+- [x] ~~海龟策略引擎 `turtle.ts` — 已移除 (v4.2)，分析由 AGT-005 Agent 自主完成~~
 - [x] 广告通知子系统 `advertising/` — 多模板、多渠道、带重试
 - [x] 股池查询服务 `pool/query.ts` — 含长桥实时行情 + 降级
 - [x] 渠道适配器架构 — 飞书卡片/文本/控制台 三渠道并行
