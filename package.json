@@ -9,7 +9,9 @@
     "db:seed": "tsx sql/seeds/seed.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "scheduler": "node --import tsx src/scripts/scheduler.ts",
+    "scheduler:once": "node --import tsx src/scripts/scheduler.ts --once"
   },
   "dependencies": {
     "dotenv": "^16.4.0",
