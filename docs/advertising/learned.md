@@ -32,3 +32,50 @@ docs/advertising/           — 部门文档（规范工作流程）
     ├── experience.md       — 经验总结（带日期戳）
     └── learned.md          — 学习笔记（新知识记录）
 ```
+
+---
+
+## 2026-05-24 — v4.4 架构文档学习（本次 Kanban 任务 t_925b57b9）
+
+**学习来源**: `docs/architecture.md` v4.4
+
+**v4.3 → v4.4 关键变化**:
+
+1. **知识库体系从框架设计进入实际落地阶段**
+   - 各部门经验库(experience.md)和学习笔记(learned.md)已初始化
+   - 回测部门文档完备（README.md + experience.md + learned.md）
+   - 跨部门知识索引 INDEX.md 已建立（HR/Trading/System/Risk 四大分类）
+
+2. **架构文档版本发布规范正式写入**（第6B.2节）
+   - v4.0~v4.4 各版本变更时间线文档化
+
+3. **后续规划**（第6B.3节）
+   - 各部门日常运维中持续补充 experience.md 和 learned.md
+   - Trading/System/Risk 分类知识库内容填充（当前待补充）
+
+**对广告部门直接影响**:
+- 无新增去重规则变更，第6A.6节仍为现有去重逻辑
+- 广告部门 README.md/experience.md/learned.md 已在 v4.3 周期初始化完毕
+- 广告部经验库路径 `src/knowledge/advertising/` 和部门文档路径 `docs/advertising/` 的分工已正确建立
+
+---
+## 2026-05-24 — 推送 RAG-001 v4.4 架构文档学习完成通知
+
+- 审核部门组长 RAG-001 完成 v4.4 架构文档（1220行）全文学习
+- 蓝色卡片推送成功，message_id: om_x100b6e29915caca8b118d825774e684
+- 审核部门纯事后审核定位：PASS/WARN/FAIL 技术审核 + Agent 绩效评估
+
+---
+
+## 2026-05-24 — 残余调度任务处理
+
+**事件**: AGT-005（海龟策略）残余调度任务 `t_e5b0ec85` 启动，但原调度任务 `t_e1ac8e68` 在 Kanban 看板上已不存在（已完成/清理）。任务被 dispatcher 标记为 archived。
+
+**处理**:
+- 确认任务已归档，无需调用 `kanban_complete`
+- 系统其他14个 Agent 均在正常 running 状态
+- 主任务 `t_2f4e3fad` 为广告部门常驻实例
+- 上次通知缓存：BKT-001 deep_learning_report 于 2026-05-24T03:58 发送
+- 无待处理的未通知消息
+
+**经验**: 残余调度启动时，直接确认状态即可，无需额外操作。

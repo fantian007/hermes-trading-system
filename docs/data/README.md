@@ -45,7 +45,7 @@ npx tsx src/scripts/data-service.ts --type <TYPE> [--symbol <SYM>] [--days <N>]
 |--------|------|----------|------|
 | `quote` | 实时报价 | `--symbol` | `--type quote --symbol NVDA.US` |
 | `kline` | 历史K线 | `--symbol` | `--type kline --symbol AAPL.US --days 30` |
-| `account` | 账户信息 | 无 | `--type account` |
+| `account` | 账户资产 | 无 | `--type account` |
 | `positions` | 当前持仓 | 无 | `--type positions` |
 | `watchlist` | 自选股行情 | 无 | `--type watchlist` |
 | `pool` | 股池数据 | 无 | `--type pool` |
@@ -105,7 +105,7 @@ npx tsx src/scripts/execute-decision.ts \
 ## 📝 已知限制
 
 - **News API**：模拟盘暂无权限（403308），返回 `available: false`
-- **长桥 CLI 进度行**：`--format json` 输出可能含 "Submitting..." 等非 JSON 行，解析时需从末行取有效 JSON
+- **长桥 CLI HOME 问题**：Hermes profile 重设 HOME 导致 CLI 找不到 token，data-service.ts 已在 `execSync` 中显式设置 `HOME=/Users/zys`
 - **超时策略**：单次查询 30s 超时，避免阻塞整个数据管道
 
 ---

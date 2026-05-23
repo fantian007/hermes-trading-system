@@ -40,6 +40,23 @@
 
 ---
 
+## 2026-05-24 — v4.4 全员学习通知发送
+
+**问题**: HR-001 通知推送 v4.4 全员学习消息到飞书，send-card.ts 超时（30s）。
+
+**可行方案**:
+- 直接使用 curl 调用飞书 API 更稳定可靠
+- 先用 `tenant_access_token/internal` 获取 token
+- 再用 `/im/v1/messages` 发送 `interactive` 类型消息
+- 卡片内容 JSON 需要双重序列化（外层 body.content 是 string 化后的 card JSON）
+- curl 方式比 tsx 启动快，适合快速推送
+
+**经验**:
+- send-card.ts 依赖 tsx 启动 + Node.js 网络栈，网络波动时易超时
+- curl 直调飞书 API 是可靠的 fallback 方案
+
+---
+
 ## 2026-05-23 — 问题升级链确认
 
 **发现**: v4.3 第6A.4节正式文档化问题升级链：

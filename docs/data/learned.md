@@ -4,6 +4,13 @@
 
 ---
 
+## 2026-05-24
+
+### data-service.ts 修复
+- `fetchAccount()` 原来调用 `longbridge account`（不存在的子命令），改为 `longbridge assets`
+- `lb()` 函数中的 HOME 强制设为 `/Users/zys` 解决 Hermes profile 重定向 HOME 问题
+- JSON 解析算法从"反向找单行"改为"正向找起始行+保留多行 JSON 结构"
+
 ## 2026-05-23
 
 ### v4.1 架构第6节（scheduler/海龟/广告/股池/渠道）

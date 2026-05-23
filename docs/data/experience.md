@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-05-24
+
+### Hermes profile HOME 导致 longbridge CLI 找不到 token
+- Hermes Agent 会重设 `HOME` 为 profile 路径（如 `/Users/zys/.hermes/profiles/data-agent/home`）
+- `longbridge` CLI 读取 `~/.longbridge` 找 token，而 `~` 被重定向到 profile HOME，导致找不到
+- 修复：`execSync('longbridge ...', { env: { ...process.env, HOME: '/Users/zys' } })`
+
+### data-service.ts JSON 解析 bug
+- `longbridge --format json` 返回 **pretty-printed** JSON（多行缩进）
+- 旧算法从末行往前找 `{` 开头行并 `JSON.parse(singleLine)`，解析单个 `{` 失败
+- 修复：找到 JSON 起始行后，`lines.slice(start).join('\n')` 保留多行 JSON 结构
+
 ## 2026-05-23
 
 ### 长桥 CLI 输出解析

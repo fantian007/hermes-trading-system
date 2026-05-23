@@ -24,12 +24,12 @@
 | 编号 | 代号 | 角色 | 策略方向 | 状态 |
 |------|------|------|----------|------|
 | AGT-001 | strategy-01 | **策略组长 / 中心调度器** | 不分析、不投票，只做任务调度 | ACTIVE |
-| AGT-002 | strategy-02 | 策略分析师 | 均线交叉策略 (MA Crossover) | ACTIVE |
-| AGT-003 | strategy-03 | 策略分析师 | MACD 金叉死叉 + 背离检测 | ACTIVE |
-| AGT-004 | strategy-04 | 策略分析师 | RSI 超买超卖 + 背离 | ACTIVE |
-| AGT-005 | strategy-05 | 策略分析师 | 布林带突破 (Bollinger Bands) | ACTIVE |
-| AGT-006 | strategy-06 | 策略分析师 | 动量突破 + 成交量确认 | ACTIVE |
-| AGT-007 | strategy-07 | 策略分析师 | 均线交叉死叉 + 缩量确认 | ACTIVE |
+| AGT-002 | strategy-02 | 策略分析师 | MACD 金叉死叉 + 背离检测 (MACD Crossover) | ACTIVE |
+| AGT-003 | strategy-03 | 策略分析师 | RSI 超买超卖 + 背离 (Relative Strength Index) | ACTIVE |
+| AGT-004 | strategy-04 | 策略分析师 | 布林带突破 (Bollinger Bands) | ACTIVE |
+| AGT-005 | strategy-05 | 策略分析师 | 海龟突破 N 日高低点+ATR (Turtle Trading) | ACTIVE |
+| AGT-006 | strategy-06 | 策略分析师 | 价格异动 + 放量突破 (Price Breakout) | ACTIVE |
+| AGT-007 | strategy-07 | 策略分析师 | 均线交叉 MA5/MA20 (MA Crossover) | ACTIVE |
 
 ### 调度协议（AGT-001 专用）
 
@@ -38,8 +38,10 @@ AGT-001 是系统唯一的中心调度器，不参与分析与投票。每 3 分
 1. `hermes kanban list` — 查看所有 Agent 状态
 2. 对空闲 Agent 派发任务（跳过 running）
 3. 检查策略输出 → 创建选举/执行/审核任务
-4. 通知 advertising-agent 发飞书调度摘要
-5. 等待 3 分钟，回到步骤 1
+4. **投票并发控制**: 创建投票任务前检查 ELC 是否忙碌（确认 kanban 中 election-committee 无 running 任务），避免并发崩溃
+5. **数据频次管理**: 提醒 strategy-02~07 使用缓存策略，避免重复向 data-agent 请求相同数据
+6. 通知 advertising-agent 发飞书调度摘要（无新数据不重复推）
+7. 等待 3 分钟，回到步骤 1
 
 **问题升级链**：下级 → 直属上级 → CEO → 飞书通知用户（仅无法解决时）
 - strategy-02~07 升级到 strategy-01（组长）
@@ -110,4 +112,33 @@ npx tsx src/scripts/send-notify.ts --message "..."
 
 ---
 
-> 最后更新：2026-05-23 by AGT-001
+> 最后更新：2026-05-24 by AGT-001 (架构 v4.4 学习完成)
+
+## v4.4 培训要点（2026-05-24 学习记录）
+
+以下为 v4.4 架构文档中与策略部门直接相关的变更。组长 AGT-001 已确认组员 strategy-02~07 通过父任务学习：
+
+### 1. scheduler.ts 已删除 — 调度由 AGT-001 接管
+- 调度循环改为 `scripts/scheduler-loop.sh`，每 3 分钟执行一次
+- AGT-001 通过 Kanban 任务驱动调度，不再依赖独立 TS 进程
+
+### 2. 策略 Agent 数据频次管理 (§6A.7)
+- 策略 Agent 自主管理向 data-agent 请求数据的频率和缓存策略
+- 避免不必要的数据拉取，减轻数据部门负担
+
+### 3. 投票并发控制 (§6A.8)
+- 发起投票前必须检查选举委员会（ELC）是否忙碌
+- 避免并发投票轮次导致 ELC 崩溃（曾出现 3 个并发任务抢进程）
+
+### 4. 问题升级链
+- strategy-02~07 → strategy-01（组长） → CEO → 飞书通知用户（仅无法解决时）
+- CEO 自主决策，不请示用户
+
+### 5. 广告部去重
+- 无新数据不重复推送飞书消息，避免信息洪流
+
+### 6. 知识库体系已落地
+- 策略部门知识库位置：`src/knowledge/strategy/`
+- 部门经验文档：`docs/strategy/experience.md`
+- 部门学习笔记：`docs/strategy/learned.md`
+- 跨部门知识索引：`docs/knowledge/INDEX.md`
