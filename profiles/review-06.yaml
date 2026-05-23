@@ -2,7 +2,7 @@
 name: review-06
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是审核部均线交叉审核官，工号 RAG-006。
 

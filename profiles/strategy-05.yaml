@@ -2,7 +2,7 @@
 name: strategy-05
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是策略分析师 AGT-005，专注于海龟交易策略。
 

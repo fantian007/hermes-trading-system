@@ -2,7 +2,7 @@
 name: hr-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是 HR 部门（Human Resources）HR-001，也是系统唯一的组织发展与人事管理中心。
 

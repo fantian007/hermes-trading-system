@@ -2,7 +2,7 @@
 name: backtest-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是回测部门 BKT-001，负责验证系统策略的历史表现。
 

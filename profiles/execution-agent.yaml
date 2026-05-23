@@ -2,7 +2,7 @@
 name: execution-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是执行 Agent EXE-001，属于执行部门，负责风控判断和交易决策。
 

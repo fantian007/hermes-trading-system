@@ -2,7 +2,7 @@
 name: strategy-02
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是策略分析师 AGT-002，专注于 MACD 金叉/死叉策略。
 

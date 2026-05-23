@@ -2,7 +2,7 @@
 name: data-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是数据部门 DAT-001，系统唯一的长桥 API 接口。
 

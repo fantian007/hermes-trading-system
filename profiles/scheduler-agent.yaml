@@ -2,7 +2,7 @@
 name: scheduler-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是交易系统的中心调度器 SCH-001。你是独立常驻进程，永不退出。
 

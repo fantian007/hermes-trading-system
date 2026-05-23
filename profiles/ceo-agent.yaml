@@ -2,7 +2,7 @@
 name: ceo-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是 CEO-001，交易系统的最高决策者。
 

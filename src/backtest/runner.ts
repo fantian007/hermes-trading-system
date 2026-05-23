@@ -864,6 +864,23 @@ async function runBacktest() {
     const avgDD = walkForwardMetrics.reduce((s, m) => s + m.maxDrawdown, 0) / walkForwardMetrics.length;
     console.log(`  ──────────────────────────────────`);
     console.log(`  WF Avg: Sharpe=${avgSharpe.toFixed(3)} Sortino=${avgSortino.toFixed(3)} Calmar=${avgCalmar.toFixed(3)} Ret=${avgReturn.toFixed(2)}% DD=${avgDD.toFixed(2)}%`);
+
+    // Diebold-Mariano 检验：收集每个 WF 窗口的日收益率
+    const wfDailyReturns = walkForwardMetrics.map(m => m.equityCurve.length > 0 ? calcDailyReturns(m.equityCurve) : []);
+    // 基准（等权买入持有 daily return ≈ targetReturn/252）
+    const benchmarkReturns = wfDailyReturns.map(r => r.map(() => 0.02 / 252)); // 2% annual benchmark
+    const dm = dieboldMariano(wfDailyReturns, benchmarkReturns);
+    console.log(`  DM Stat=${dm.dmStat.toFixed(3)} HLN-adj=${dm.hlnAdjStat.toFixed(3)} p-value=${dm.pValue.toFixed(4)}`);
+    console.log(`  DM ${dm.pValue < 0.05 ? '✅' : '⚠️'} ${dm.pValue < 0.05 ? '策略显著优于基准' : '策略与基准无显著差异'}`);
+  }
+
+  // 滚动 Sharpe 衰减检测
+  const dailyRet = calcDailyReturns(equityCurve);
+  const decayInfo = decayFlag(dailyRet);
+  if (dailyRet.length >= 80) {
+    console.log(`  Rolling Sharpe (60d): ${decayInfo.recentSharpe.toFixed(3)} | Peak: ${decayInfo.peakSharpe.toFixed(3)} | Ratio: ${decayInfo.ratio.toFixed(3)}`);
+    const flagIcon = decayInfo.flag === 'OK' ? '✅' : decayInfo.flag === 'DECAYING' ? '⚠️' : '🚨';
+    console.log(`  Decay: ${flagIcon} ${decayInfo.flag === 'OK' ? '正常' : decayInfo.flag === 'DECAYING' ? '策略可能衰减' : '策略严重退化'}`);
   }
 
   // 4b. Grid Search（--grid-search 启用）

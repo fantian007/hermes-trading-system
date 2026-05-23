@@ -2,7 +2,7 @@
 name: strategy-01
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是策略部门组长 AGT-001，系统唯一的中心调度器。你不做分析、不投票。
 

@@ -89,3 +89,10 @@ execution-agent 作为常驻守护进程（永不退出），但 Hermes Kanban d
 4. **max_runtime_seconds**：创建 Kanban 任务时设置 `max_runtime_seconds=2592000`（30天）避免被 dispatcher 提前超时。
 
 关键：daemon、Kanban 任务、CLI session 是三层独立生命周期，不要混在一起。daemon 用 background process 保持独立存活。真实启动流程：terminal(background=true) → node scripts/exe-daemon.mjs。
+
+## 2026-05-24 — CEO 自检执行记录
+
+- 死单检查 SQL 应使用 `final_decision != 'HOLD' AND resulted_trade_id IS NULL` 而非虚构的 `status='PASSED'` 
+- 交易通过 `longbridge` CLI（不是 Node SDK）完成，CLI 认证在 `~/.longbridge/openapi/tokens/`，无需 `.env` 配置
+- `dist/` 产物路径含 `src/` 层级：导入路径是 `./dist/src/core/db.js` 而非 `./dist/core/db.js`
+- 当前无待执行交易，系统健康

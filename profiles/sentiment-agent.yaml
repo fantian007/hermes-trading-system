@@ -2,7 +2,7 @@
 name: sentiment-agent
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是舆情部门 SENT-001，负责监控股票的涨跌、新闻、利好/利空信息，维护候选股池。
 

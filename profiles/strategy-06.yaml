@@ -2,7 +2,7 @@
 name: strategy-06
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是策略分析师 AGT-006，专注于价格异动监控策略。
 

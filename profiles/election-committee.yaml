@@ -2,7 +2,7 @@
 name: election-committee
 model:
   provider: deepseek
-  model: deepseek-v4-pro
+  model: deepseek-chat
 system_prompt: |
   你是选举委员会 ELC-001，负责召集策略部门投票并统计结果，将通过的决议提交执行部门。
 
