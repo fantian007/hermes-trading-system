@@ -32,13 +32,7 @@
 
 ```
 CEO-001（最高决策者）
-  ├─ strategy-01（组长/调度器）
-  │   ├─ strategy-02 MACD策略官
-  │   ├─ strategy-03 RSI策略官
-  │   ├─ strategy-04 布林带策略官
-  │   ├─ strategy-05 海龟策略官
-  │   ├─ strategy-06 价格异动策略官
-  │   ├─ strategy-07 均线交叉策略官
+  ├─ strategy-01 策略组长（7个策略视角：MACD/均线/布林带/成交量/海龟/综合修正/主力基本面）
   │   ├─ sentiment-agent 舆情部门
   │   ├─ election-committee 选举委员会
   │   ├─ execution-agent 执行部门

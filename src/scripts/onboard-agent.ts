@@ -30,7 +30,7 @@ function printHelp(): void {
   JSON 字段：
   {
     "agent_name": "均值回归-布林带增强",
-    "profile_name": "strategy-06",
+    "profile_name": "strategy-01",
     "profile_model": "deepseek/deepseek-chat",   // 可选，默认 deepseek/deepseek-chat
     "dept_name": "选股部门",
     "role_title": "布林带增强策略官",              // 岗位名称
