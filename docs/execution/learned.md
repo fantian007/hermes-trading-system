@@ -37,6 +37,13 @@ election-committee 聚合投票 → 决定 BUY/SELL
 - 提交后订单状态为 NotReported，待开市后执行
 - buy_price=0.0 是因为成交价未知，待交易所确认后更新
 
+### ⚠️ 重复挂单教训 (2026-05-24)
+- **非交易时段 MO 单一直 NotReported，重试会导致同 symbol 重复挂单**
+- 下单前先查挂单列表：`longbridge order --format json`，看同 symbol 是否有 NotReported/Submitted 状态的订单
+- 有则跳过，不重复提交
+- **已经交给我风控决定的就不要怀疑没成功再重复提交**。提交后状态 NotReported 是正常的，等开市成交就好
+- 不要在几秒内对同一股票重复下单
+
 ### 异常处理
 - data-agent crash 时，execution-agent 可以自己直接调用 data-service.ts 脚本获取数据（因为 execution-agent 也在交易系统目录下运行）
 - 但下单必须通过 data-agent（profile 约束），不能越权
