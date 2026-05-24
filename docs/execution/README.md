@@ -1,24 +1,33 @@
-# 执行部门
+# 执行部门 (Execution Department)
+
+**部门ID:** DEPT-EXE
+**负责人:** EXE-001
+**对接部门:** 数据部门(data-agent)、选举委员会(election-committee)、HR部门(hr-agent)、广告部门(advertising-agent)
 
 ## 职责
-负责风控判断和交易决策执行，不直接操作长桥 API。
 
-## 对接方式
-| 部门 | Agent | 对接方式 |
-|------|-------|---------|
-| 数据部门 | data-agent | Kanban 任务创建，body 写明需求和绝对路径 |
-| 选举委员会 | election-committee | 从 election_rounds 表读取决策 |
-| 广告部门 | advertising-agent | Kanban 任务通知，注明需推送飞书 |
-| HR | hr-agent | Kanban 任务 |
+1. **风控判断** — 收到选举委员会的 BUY/SELL 决策后，进行风控判断
+2. **交易执行** — 风控通过后，通过数据部门下达交易指令
+3. **持仓监控** — 持续监控已持仓位的状态
+4. **死单检测** — 巡检发现的死单通知 ELC 重新投票
 
 ## 风控规则
-- MAX_POSITION_PCT: 20%（单票仓位上限）
-- MAX_DAILY_TRADES: 10（日交易次数上限）
-- MIN_CASH_RESERVE: 10%（最低现金保留）
-- MAX_LOSS_PER_TRADE: 5%（单笔最大亏损）
-- MAX_DRAWDOWN_DAILY: 8%（日最大回撤熔断）
 
-## 部门文档
-- `experience.md` — 经验总结
-- `learned.md` — 学习笔记
-- `weekly-*.md` — 周报（每周一更新）
+- 单票仓位上限：20%
+- 日交易次数上限：10 次
+- 最低现金保留：10%
+- 单笔最大亏损：5%
+- 日最大回撤熔断：8%
+
+## 工作流程
+
+1. 检查死单（elc通过的但未执行的投票）
+2. 检查待执行的交易请求
+3. 检查当前持仓和可用资金
+4. 风控检查
+5. 通知广告部门巡检结果
+
+## 通知规则
+
+所有操作完成（风控判断、提交执行、执行结果），立即通知广告部门。
+广告部门是系统唯一对外出口。

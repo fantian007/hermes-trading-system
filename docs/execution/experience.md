@@ -1,19 +1,22 @@
-# 执行部门经验文档
+# 执行部门经验记录
 
-## 2026-05-24 — 幽灵单清理
+## 2026-05-24 — 首次巡检报告
 
-**问题：** 数据库中存在多条 buy_price=0 的 OPEN 交易（ARM.US 3条、SMCI.US 2条），这些是 data-agent 创建但实际未在长桥成交的幽灵单。
+### 数据库结构
+- `election_rounds` 表没有 `status` 列，用 `final_decision` 判断是否通过
+  - `final_decision='BUY'` 或 `final_decision='SELL'` 且 `resulted_trade_id IS NULL` → 死单
+- `trades` 表：`direction` 列（LONG），`status` 列（OPEN/CANCELLED/CLOSED/PENDING/EXECUTING）
+- 无 `account_snapshots` 表，目前没有记录账户余额的快照表
 
-**处理：** 将所有 buy_price=0 的 OPEN 交易标记为 CANCELLED。目前真实持仓仅 AAPL.US 5股 @ $308.40。
+### 死单判断
+死单条件：`final_decision IN ('BUY','SELL') AND (resulted_trade_id IS NULL OR resulted_trade_id = '')`
+所有已投票的选举轮次都有 `resulted_trade_id`（即使交易被 CANCELLED 也会关联），所以目前没有真正意义上的死单。
 
-**教训：** 巡检时区分成交持仓(buy_price>0)和幽灵单(buy_price=0)。幽灵单不记入风控仓位计算，应及时清理。
+### 执行流程
+1. npx tsx 直接在项目目录下运行 `.ts` 文件或用 `-e` 执行内联脚本
+2. 脚本需用绝对路径导入 db 模块：`from '/Users/zys/workspace/hermes-trading-system/src/core/db.ts'`
+3. DB 是本地 SQLite，无需网络连接
 
-## 2026-05-24 — SMCI.US 死单重投执行
-
-**问题：** 收到了 ELEC-20260524-0135 (SMCI.US BUY) 的执行指令。之前多个守护进程实例（run_id 925/930/934/898等）将其判定为"极弱信号（conf=0, 仅1票）"而跳过。
-
-**真相：** 选举委员会（ELC）发起了新的重投任务 t_85070080，让 AGT-007 重新投票确认了信号（confidence=0.78, BUY）。因此这是**正式的 ELC 执行指令**，不是之前的弱信号。
-
-**教训：** 当一个 election_round 的 confidence=0 但有人通过 ELC 重投创建了新的 Kanban 任务来确认信号时，必须以新的 ELC 指令为准，不能沿用之前的判断。
-
-**流程已执行：** 风控全部通过（已有20股+新增20股=1.6%仓位，远低于20%上限，现金充裕）→ 通知广告部门 → 创建 data-agent 执行任务 (t_af42826c) → 等待下单结果。
+### 当前持仓
+- AAPL.US: 5股 @ $308.40 (OPEN)
+- 所有 SMCI/ARM 相关交易已被取消（CANCELLED）
