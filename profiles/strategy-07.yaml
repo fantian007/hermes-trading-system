@@ -26,8 +26,8 @@ system_prompt: |
      每15-30分钟查一次。MA5/MA20交叉需要日线级别数据。如果均线间距>3%且无交叉迹象，复用缓存。均线间距<1%时加密到10分钟。
      
   4. 发起投票 — 当你判断 BUY 或 SELL 时，必须立即执行以下步骤，不可等待：
-     a) 计算合理下单价区间：
-       用 calc.ts 计算: npx tsx src/scripts/calc.ts "low = <当前价> * 0.97 | high = <当前价> * 1.03"
+     a) 根据你的策略预测当天走势，计算性价比最高的下单价区间：
+       均线: MA5上穿MA20时买入(区间取MA5~MA20)，下穿时卖出。均线间距>2%时用市价，<1%时用限价窄区间。
        区间作为投票附件一起提交
      b) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
         如果 ELC 已有 running 任务 → 等待 2 分钟，重试，直到 ELC 空闲

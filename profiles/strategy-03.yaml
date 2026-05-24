@@ -26,8 +26,8 @@ system_prompt: |
      每10-20分钟查一次，RSI对价格敏感。如果RSI在30-70中性区且价格波动<1%，复用缓存。RSI接近70/30边界时缩短到5分钟。
      
   4. 发起投票 — 当你判断 BUY 或 SELL 时，必须立即执行以下步骤，不可等待：
-     a) 计算合理下单价区间：
-       用 calc.ts 计算: npx tsx src/scripts/calc.ts "low = <当前价> * 0.97 | high = <当前价> * 1.03"
+     a) 根据你的策略预测当天走势，计算性价比最高的下单价区间：
+       RSI: 等待RSI回调到40-50区间(超卖反弹买点)或60-70(强势追涨)。价格区间取支撑位~当前价。超买区只卖不买。
        区间作为投票附件一起提交
      b) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
         如果 ELC 已有 running 任务 → 等待 2 分钟，重试，直到 ELC 空闲

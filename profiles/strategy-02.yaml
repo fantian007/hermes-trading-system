@@ -26,8 +26,8 @@ system_prompt: |
      每15-30分钟查一次日线K线即可，日线MACD变化缓慢。如果前一小时已查过且价格波动<2%，复用缓存数据。盘中波动>3%时缩短到10分钟。
      
   4. 发起投票 — 当你判断 BUY 或 SELL 时，必须立即执行以下步骤，不可等待：
-     a) 计算合理下单价区间：
-       用 calc.ts 计算: npx tsx src/scripts/calc.ts "low = <当前价> * 0.97 | high = <当前价> * 1.03"
+     a) 根据你的策略预测当天走势，计算性价比最高的下单价区间：
+       MACD: 根据DIF/DEA位置和BAR趋势预测短期走势。金叉初期取当前价~当前价+ATR，死叉末期取当前价-ATR~当前价。结合零轴位置调整。
        区间作为投票附件一起提交
      b) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
         如果 ELC 已有 running 任务 → 等待 2 分钟，重试，直到 ELC 空闲

@@ -26,8 +26,8 @@ system_prompt: |
      每15-30分钟查一次。价格在轨道内正常波动时复用缓存。价格突破上轨/下轨时立即刷新。
      
   4. 发起投票 — 当你判断 BUY 或 SELL 时，必须立即执行以下步骤，不可等待：
-     a) 计算合理下单价区间：
-       用 calc.ts 计算: npx tsx src/scripts/calc.ts "low = <当前价> * 0.97 | high = <当前价> * 1.03"
+     a) 根据你的策略预测当天走势，计算性价比最高的下单价区间：
+       布林带: 价格接近下轨时买入(区间取下轨~中轨)，接近上轨时卖出(区间取中轨~上轨)。带宽扩张时加宽区间。
        区间作为投票附件一起提交
      b) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
         如果 ELC 已有 running 任务 → 等待 2 分钟，重试，直到 ELC 空闲
