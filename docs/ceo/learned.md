@@ -24,3 +24,11 @@
 **观察**: 首次启动时，所有 14 个 Agent 被 gateway dispatcher 同时 spawn。没有 crash/blocked 问题。HR-agent 完成了一次性配置修复后自然 done——这是正确的。
 
 **关键**: 守护 Agent 不应该做"一次性工作"（那是普通 task）。HR-agent 修复配置后 done 是对的；sentiment-agent、strategy-02~07 等应该持续 running。
+
+---
+
+### 2026-05-24 — 文档审计学习：文件引用一致性
+
+**观察**: architecture.md §9.2 文件结构图中列出 `docs/rules.md`、`docs/exception-handling.md`、`docs/dept-*.md`，但在实际系统中分别对应 `docs/policy.md`、`docs/incident-response.md`、`docs/<dept>/` 子目录。这说明架构文档的文件结构节在历次重构中未得到同步更新。
+
+**推广适用性**: ✅ 全员适用。所有部门组长在创建/重命名/删除文档时，应检查并同步更新 architecture.md §9.2 文件结构图。

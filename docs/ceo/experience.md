@@ -46,3 +46,36 @@ done
 
 **问题3**: policy.md 第109行审核职责描述过于简略（仅一句话）。
 **处理**: 细化为6点：审核与投票关系（不影响实时交易）、结论传递机制（review_reports → HR）、组长职责、不适配跳过机制、分类标准（PASS/WARN/FAIL）。
+
+---
+
+### 2026-05-24 — 全面文档审计（本次任务 t_6bb1683e）
+
+**背景**: CEO-001 对 docs/ 下全部部门文档执行系统级审计。
+
+**范围**: 30+ 文件（9 个部门的 README/experience/learned + architecture.md + incident-response.md + policy.md + knowledge/ 知识库）
+
+**发现**: 10 个问题：
+- P0(3): docs/rules.md/exception-handling.md/dept-*.md 文件引用不存在（architecture.md 与实际文件名不一致）
+- P1(2): 选举委员会向 strategy-01 征集投票的流程矛盾、docs/strategy/ 部门文档实际只有均线交叉内容
+- P2(2): Auth 问题多处重复记录、policy.md 与 architecture.md §6A.5 内容重叠
+- P3(3): CEO 版本号过时(v4.2→v4.4)、backtest experience.md 过期注释、上报链用词偏差
+
+**修复**:
+1. 创建 rules.md → policy.md 重定向文件
+2. 创建 exception-handling.md → incident-response.md 重定向文件
+3. 修正 architecture.md 中 rules.md/exception-handling.md/dept-*.md 引用
+4. 修正 election/README.md 中 6 处 "strategy-01~07" → "strategy-02~07（不含组长）"
+5. 更新 docs/strategy/README.md 为部门级概览（标明 AGT-007 部分）
+6. 更新 ceo/README.md 版本号 v4.2 → v4.4
+7. 更新 backtest/README.md 上报链说明
+8. 更新 backtest/experience.md 过期注释
+9. 审计报告写入 docs/knowledge/audit-2026-05-24.md
+
+**经验**: 大型系统长期运行后，architecture.md 的「文件结构」节与实际情况容易漂移。每次结构变更时（创建/改名文件），应同步更新 architecture.md §9.2。建议将文件结构检查纳入 CEO 每周巡检事项。
+
+---
+
+### 2026-05-24 — 文档审计经验总结
+
+**文档结构跟踪**: 大型系统长期运行后，architecture.md 的「文件结构」节与实际情况容易漂移。每次结构变更时（创建/改名文件），应同步更新 architecture.md §9.2。建议将文件结构检查纳入 CEO 每 5 分钟巡检中（新增一项「文档结构一致性」检查）。

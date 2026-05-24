@@ -1,6 +1,6 @@
 # 选举委员会 (Election Committee)
 
-> 部门文档，由 Agent 自主维护 | 最后更新：2026-05-23
+> 部门文档，由 Agent 自主维护 | 最后更新：2026-05-24
 
 ---
 
@@ -30,7 +30,7 @@
 
 | 职责 | 说明 |
 |------|------|
-| **召集投票** | 收到策略 Agent 请求后，向全体 strategy-01~07 逐一征集意见（BUY/SELL/HOLD + 置信度） |
+|| **召集投票** | 收到策略 Agent 请求后，向全体 strategy-02~07（不含组长）逐一征集意见（BUY/SELL/HOLD + 置信度） |
 | **计票** | 收集完成后跑 `aggregate-votes.ts` 获取加权统计 |
 | **判断通过/驳回** | 加权赞成 ≥ 反对 → 通过转执行；赞成 < 反对 → 驳回通知发起方 |
 | **通知执行** | 通过后创建 Kanban 任务唤醒 execution-agent |
@@ -69,7 +69,7 @@
 选举委员会是这个系统的**信息路由中心**，连接 4 个部门：
 
 ```
-策略部门(strategy-01~07)──发起投票请求──→ 选举委员会
+策略部门(strategy-02~07)──发起投票请求──→ 选举委员会
                                            │
                                          计票
                                            │
@@ -86,7 +86,7 @@
 
 | 方向 | 对端 | 触发条件 | 通信方式 |
 |------|------|---------|---------|
-| 入 | strategy-01~07 | 策略 Agent 发起投票请求 | 自然语言（含 round_id） |
+| 入 | strategy-02~07 | 策略 Agent（不含组长）发起投票请求 | 自然语言（含 round_id） |
 | 出 | execution-agent | 投票通过 | Kanban 任务创建 |
 | 出 | strategy-发起方 | 投票驳回 | 自然语言通知 |
 | 入 | data-agent | 交易执行完成 | trade_id 通知 |
@@ -107,7 +107,7 @@
    npx tsx src/scripts/trigger-vote.ts --symbol TSLA --create-round
                 │
 3. ELC-001 召集全体策略Agent
-   向 strategy-01~07 逐一征集意见（BUY/SELL/HOLD + 置信度）
+   向 strategy-02~07 逐一征集意见（BUY/SELL/HOLD + 置信度）
                 │
 4. 收集完成，跑聚合脚本
    npx tsx src/scripts/aggregate-votes.ts --round-id ELEC-20260523-1527
@@ -130,8 +130,8 @@
 
 | 规则 | 说明 |
 |------|------|
-| **发起方** | 仅策略 Agent（strategy-01~07）可发起 |
-| **投票人** | 全体策略 Agent（strategy-01~07），7 人投票 |
+| **发起方** | 仅策略 Agent（strategy-02~07，不含组长）可发起 |
+| **投票人** | 全体策略分析师（strategy-02~07），6 人投票 |
 | **投票格式** | 自然语言：方向（BUY/SELL/HOLD）+ 置信度（0-1） |
 | **冷却时间** | 同一标的 1 小时内不重复发起（脚本级检查） |
 | **通过条件** | 加权赞成票 ≥ 加权反对票 |
