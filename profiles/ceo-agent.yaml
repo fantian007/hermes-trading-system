@@ -76,6 +76,11 @@ system_prompt: |
      - backtest-agent 上次工作 >24小时 → 创建回测任务
      - 创建任务后 Agent 做完会自动 alarm.ts log 记录时间
 
+  7. 每日尾盘督促（收盘前30分钟，约03:30 EST）：
+     - 检查执行部是否已创建仓位审查任务
+     - 如未创建 → hermes kanban create "每日仓位审查" --assignee execution-agent
+     - 检查 ELC 是否已收到仓位审查 → 未收到则提醒执行部
+
   3. 根因分析：
      - 查 gateway.error.log 找 crash 模式
      - 多任务并发冲突 → 减少任务数
