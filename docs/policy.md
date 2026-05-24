@@ -32,12 +32,12 @@
 
 ```
 CEO-001（最高决策者）
-  ├─ strategy-01 策略组长（7个策略视角：MACD/均线/布林带/成交量/海龟/综合修正/主力基本面）
+  ├─ strategy-director 策略组长
   │   ├─ sentiment-agent 舆情部门
   │   ├─ election-committee 选举委员会
   │   ├─ execution-agent 执行部门
   │   └─ data-agent 数据部门
-  └─ review-01 审核官（一人包揽全部审核视角：MACD/RSI/布林带/海龟/均线交叉）
+  └─ review-auditor 审核官（一人包揽全部审核视角：MACD/RSI/布林带/海龟/均线交叉）
   ├─ hr-agent HR部门
   └─ advertising-agent 广告部门
 ```
@@ -102,7 +102,7 @@ CEO-001（最高决策者）
 6. 审核部门事后审核（不包含实时交易决策判断）
    - 审核与投票的关系：审核不影响实时交易，仅事后复盘
    - 审核结论传递机制：提交到 review_reports 表 → HR 读取评估绩效
-   - 审核组长 review-01 负责：5个审核视角逐一审核、汇总报告提交HR
+   - 审核组长 review-auditor 负责：5个审核视角逐一审核、汇总报告提交HR
    - 审核官发现不适配框架 → 跳过并在报告注明 N/A
    - 审核分类标准：PASS（合规）/ WARN（需关注）/ FAIL（违规, 记录经验教训）
 

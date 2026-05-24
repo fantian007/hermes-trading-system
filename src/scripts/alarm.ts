@@ -3,9 +3,9 @@
  * Agent 工作日志 — 记录/查询/清理
  *
  * 用法:
- *   npx tsx src/scripts/alarm.ts log --agent strategy-01 --task "MACD分析完成"
+ *   npx tsx src/scripts/alarm.ts log --agent strategy-director --task "MACD分析完成"
  *   npx tsx src/scripts/alarm.ts list                    # 查看所有
- *   npx tsx src/scripts/alarm.ts last --agent strategy-01  # 上次工作时间
+ *   npx tsx src/scripts/alarm.ts last --agent strategy-director  # 上次工作时间
  *   npx tsx src/scripts/alarm.ts clean                   # 清理已完成
  */
 

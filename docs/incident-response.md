@@ -108,8 +108,8 @@
 |------|------|------|
 | 审核数据获取失败 | data-agent 超时无返回 | 检查 data-agent 任务状态 → 重建 data-agent 任务 → 审核官重试 |
 | 审核框架不适配 | 如海龟框架用于非突破型交易，产生无效信号 | 审核官自行判断跳过不适配框架，在 review_reports 中注明 `N/A` |
-| 审核报告写入数据库失败 | review_reports 表写入返回错误 | 检查数据库连接 → 重试写入 → 如连续失败阻塞任务并通知 review-01 |
-| 审核超时 | review_reports 未在规定时间内提交 | review-01 检查审核官任务 → 确认是否卡死 → kill + 重建 |
+| 审核报告写入数据库失败 | review_reports 表写入返回错误 | 检查数据库连接 → 重试写入 → 如连续失败阻塞任务并通知 review-auditor |
+| 审核超时 | review_reports 未在规定时间内提交 | review-auditor 检查审核官任务 → 确认是否卡死 → kill + 重建 |
 
 ---
 
@@ -118,7 +118,7 @@
 ```
 Agent 自检异常
   → 自己修
-    → 修不了 → 报告组长 strategy-01
+    → 修不了 → 报告组长 strategy-director
       → 组长修不了 → 报告 CEO
         → CEO 按本手册处理
           → CEO 修不了 → 飞书红色卡片通知用户

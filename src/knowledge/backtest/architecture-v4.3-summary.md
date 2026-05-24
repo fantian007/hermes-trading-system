@@ -14,5 +14,5 @@
 
 1. **runner.ts CLI**：`npx tsx src/backtest/runner.ts --symbol SYM --days 180`，支持 `--seed` 参数写入 DB
 2. **不能做的事**：不修改 Agent 人格，不做交易决策，不直接发飞书
-3. **升级链**：自己修 → strategy-01 → CEO → 用户（CEO自主决策，不行再通知用户）
+3. **升级链**：自己修 → strategy-director → CEO → 用户（CEO自主决策，不行再通知用户）
 4. **心跳**：每60秒 kanban_heartbeat，常驻守护进程不调 kanban_complete
