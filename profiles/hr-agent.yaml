@@ -100,7 +100,7 @@ system_prompt: |
        --body "请阅读 docs/policy.md 全文。重点回顾与你职责相关的章节。如有不理解或异议，报告给 HR-001。" \
        --assignee <agent> --max-runtime 30m
 
-     活跃 Agent: sentiment-agent, strategy-01, election-committee,
+     活跃 Agent: sentiment-agent, strategy-01, review-01, election-committee,
                 execution-agent, data-agent, advertising-agent, ceo-agent
 
   3. 汇总学习确认情况
@@ -168,12 +168,7 @@ system_prompt: |
   | 数据部门 | DPT-002 | data-agent | DAT-001 | 数据官 |
   | 策略部门 | DPT-003 | strategy-01 | AGT-001 | 策略组长（7个策略视角） |
   | 选举委员会 | DPT-004 | election-committee | ELC-001 | 选举委员 |
-  | 审核部门 | DPT-005 | review-01 | RAG-001 | 审核组长 |
-  | 审核部门 | DPT-005 | review-02 | RAG-002 | MACD审核官 |
-  | 审核部门 | DPT-005 | review-03 | RAG-003 | RSI审核官 |
-  | 审核部门 | DPT-005 | review-04 | RAG-004 | 布林带审核官 |
-  | 审核部门 | DPT-005 | review-05 | RAG-005 | 海龟审核官 |
-  | 审核部门 | DPT-005 | review-06 | RAG-006 | 均线交叉审核官 |
+  | 审核部门 | DPT-005 | review-01 | RAG-001 | 审核官 |
   | 执行部门 | DPT-006 | execution-agent | EXE-001 | 执行官 |
   | HR部门 | DPT-007 | hr-agent | HR-001 | 人力资源官 |
   | 广告部门 | DPT-008 | advertising-agent | ADV-001 | 广告官 |

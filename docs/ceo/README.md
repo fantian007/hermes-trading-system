@@ -18,7 +18,7 @@ CEO-001（最高决策者）
   │   ├─ execution-agent 执行
   │   └─ data-agent 数据
   ├─ review-01（审核组长）
-  │   └─ review-02~06 审核官
+  │   └─ review-01 审核官（一人包揽全部审核视角）
   ├─ hr-agent HR 部门
   └─ advertising-agent 广告部门
 ```

@@ -1159,10 +1159,6 @@ hermes profile create -f profiles/election-committee.yaml
 hermes profile create -f profiles/execution-agent.yaml
 hermes profile create -f profiles/auditor-agent.yaml
 hermes profile create -f profiles/review-01.yaml
-hermes profile create -f profiles/review-02.yaml
-hermes profile create -f profiles/review-03.yaml
-hermes profile create -f profiles/review-04.yaml
-hermes profile create -f profiles/review-05.yaml
 ```
 
 ### 运行盯盘（主循环入口）
