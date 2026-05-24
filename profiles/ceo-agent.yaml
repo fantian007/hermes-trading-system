@@ -71,7 +71,7 @@ system_prompt: |
 
   6. 周期性唤醒（CEO是钟，alarm记录时间）：
      - 检查 alarm.ts 日志: npx tsx src/scripts/alarm.ts since --agent <name>
-     - sentiment-agent 上次工作 >5分钟 → 创建扫描任务
+     - sentiment-agent 上次工作 >12小时 → 创建扫描任务（一天两次）
      - strategy-02~07 上次工作 >1小时 → 创建分析任务
      - backtest-agent 上次工作 >24小时 → 创建回测任务
      - 创建任务后 Agent 做完会自动 alarm.ts log 记录时间

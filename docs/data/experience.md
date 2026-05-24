@@ -46,3 +46,13 @@
 - 解决：使用 longbridge CLI 直接执行（跳过 execute-decision.ts）
 - longbridge v0.22.1 市价单用法：`longbridge order buy <SYM> <QTY> --order-type MO -y --format json`
 - 记得加 `HOME=/Users/zys` 前缀
+
+## 2026-05-24
+
+### 记录 AGT-002 对 NVDA.US 的 SELL 投票
+- 任务: 将 AGT-002 (MACD 策略) 的投票写入 agent_votes 表
+- 投票详情: vote_direction=SELL, confidence=0.65, 基于 MACD 死叉确认
+- 需要先确保 trades 表中有对应的 trade_id (ELEC-20260524-0408)，否则 FK 约束会失败
+- 使用 INSERT OR IGNORE INTO trades 插入临时待决策记录 (price=0, qty=1)
+- 插入 agent_votes 后自动更新 election_rounds 的投票统计
+

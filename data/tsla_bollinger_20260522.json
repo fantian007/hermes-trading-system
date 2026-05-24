@@ -1,0 +1,17 @@
+{
+  "symbol": "TSLA.US",
+  "last_close": 426.01,
+  "last_date": "2026-05-22 04:00:00",
+  "bollinger": {
+    "middle": 409.26,
+    "upper": 455.22,
+    "lower": 363.3,
+    "bb_pct": 0.6822,
+    "bandwidth": 0.2246,
+    "squeeze": false,
+    "position": "inside"
+  },
+  "signal": "neutral",
+  "confidence": "high",
+  "reason": "价格在布林带中轨附近运行，趋势不明显"
+}

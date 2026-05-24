@@ -79,3 +79,8 @@ docs/advertising/           — 部门文档（规范工作流程）
 - 无待处理的未通知消息
 
 **经验**: 残余调度启动时，直接确认状态即可，无需额外操作。
+
+## 2026-05-24 — send-card.ts 接口调整
+- send-card.ts 期望标准输入的是 **card内容JSON对象**（即 elements/header/config），而非包含 receive_id/msg_type 的完整消息封装
+- sendCard 函数内部会自动添加 receive_id (从 feishu.chatId) 和 msg_type='interactive'，并将 card 做 JSON.stringify 作为 content
+- 往级输入包含 receive_id 时会导致 double-escaping 报错 (ErrCode: 200621)

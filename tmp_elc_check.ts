@@ -1,0 +1,11 @@
+import { getDb } from './src/core/db.js';
+const db = getDb();
+const round = db.prepare('SELECT * FROM election_rounds WHERE round_id = ?').get('ELEC-20260524-1210');
+console.log('=== Round ===');
+console.log(JSON.stringify(round, null, 2));
+const agents = db.prepare("SELECT * FROM agents WHERE status = 'ACTIVE' ORDER BY agent_id").all();
+console.log('\n=== Active Agents ===');
+console.log(JSON.stringify(agents, null, 2));
+const existing = db.prepare("SELECT * FROM agent_votes WHERE trade_id = ?").all('ELEC-20260524-1210');
+console.log('\n=== Existing Votes ===');
+console.log(JSON.stringify(existing, null, 2));

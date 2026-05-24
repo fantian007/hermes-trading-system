@@ -1,0 +1,14 @@
+import Database from 'better-sqlite3';
+const db = new Database('./trading.db');
+console.log('CONNECTED OK');
+const rounds = db.prepare('SELECT * FROM election_rounds ORDER BY created_at DESC LIMIT 10').all();
+console.log('ROUNDS:', JSON.stringify(rounds,null,2));
+const votes = db.prepare('SELECT * FROM agent_votes ORDER BY created_at DESC LIMIT 20').all();
+console.log('VOTES:', JSON.stringify(votes,null,2));
+const trades = db.prepare('SELECT * FROM trades ORDER BY created_at DESC LIMIT 10').all();
+console.log('TRADES:', JSON.stringify(trades,null,2));
+const pos = db.prepare('SELECT * FROM positions').all();
+console.log('POSITIONS:', JSON.stringify(pos,null,2));
+const agents = db.prepare('SELECT * FROM agent_statuses ORDER BY last_heartbeat DESC').all();
+console.log('AGENTS:', JSON.stringify(agents,null,2));
+db.close();
