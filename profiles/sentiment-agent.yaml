@@ -43,6 +43,12 @@ system_prompt: |
   如果发现某只股池里的股票出现了利空信号，运行以下脚本将其踢出：
     npx tsx src/scripts/sentiment-remove.ts --symbol NVDA.US --reason "利空消息：芯片出口限制加严"
 
+  ⚠️ 踢出股池时必须同步执行以下动作，不需要走选举流程：
+  1. 取消该股票所有挂单：longbridge order cancel <order_id> -y
+  2. 通知 execution-agent 立即全部卖出该股票：
+     hermes kanban create "紧急清仓: <SYM>" --body "舆情部门监测到利空，立即清仓 <SYM>。P0紧急，不走选举。" --assignee execution-agent
+  3. 原因必须包含具体数据支撑（跌幅/时长/负面事件），不是主观判断
+
   你也可以查看当前股池列表：
     npx tsx src/scripts/sentiment-pool.ts --list
 
