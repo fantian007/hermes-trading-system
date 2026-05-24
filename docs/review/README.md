@@ -18,7 +18,7 @@
 
 | 工号 | 名称 | Profile | 岗位 | 状态 |
 |------|------|---------|------|------|
-| RAG-001 | 审核官 | review-01 | 5个审核视角：MACD/RSI/布林带/海龟/均线交叉 | ACTIVE |
+| RAG-001 | 审核官 | review-auditor | 5个审核视角：MACD/RSI/布林带/海龟/均线交叉 | ACTIVE |
 
 > RAG-001 是审核组长，持有5个审核视角（MACD/RSI/布林带/海龟/均线交叉），独立完成所有审核工作。
 
@@ -321,7 +321,7 @@ HR 部门 (hr-agent)
 | 交易完成通知来源 | data-agent | DAT-001 |
 | 审核报告接收方 / 人事决策 | hr-agent | HR-001 |
 | 对外通知出口 | advertising-agent | ADV-001 |
-| 策略部门组长 | strategy-01 | AGT-0001 |
+| 策略部门组长 | strategy-director | AGT-0001 |
 | 系统最高决策 | CEO-001 | — |
 
 ---

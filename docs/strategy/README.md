@@ -35,7 +35,7 @@
 
 ## 升级链
 
-策略Agent(02~07) → strategy-01(组长) → CEO → 飞书通知用户
+策略Agent(02~07) → strategy-director(组长) → CEO → 飞书通知用户
 
 ---
 

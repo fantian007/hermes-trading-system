@@ -39,7 +39,7 @@ done
 **触发**: RAG-005（海龟审核官）学习规章制度时发现审核部门3项制度缺陷。
 
 **问题1**: docs/review/README.md 仅有占位文本，无实质性内容。
-**处理**: 按 policy.md 第97行「部门文档缺失 → CEO 通知该部门补写」，创建 Kanban 任务 t_aa94f3c3 给 review-01。
+**处理**: 按 policy.md 第97行「部门文档缺失 → CEO 通知该部门补写」，创建 Kanban 任务 t_aa94f3c3 给 review-auditor。
 
 **问题2**: incident-response.md 缺乏审核专用异常场景。
 **处理**: 新增第十章「审核异常」，覆盖4场景：数据获取失败、框架不适配、写入失败、超时。后续节号顺延（十一→十二）。
@@ -57,7 +57,7 @@ done
 
 **发现**: 10 个问题：
 - P0(3): docs/rules.md/exception-handling.md/dept-*.md 文件引用不存在（architecture.md 与实际文件名不一致）
-- P1(2): 选举委员会向 strategy-01 征集投票的流程矛盾、docs/strategy/ 部门文档实际只有均线交叉内容
+- P1(2): 选举委员会向 strategy-director 征集投票的流程矛盾、docs/strategy/ 部门文档实际只有均线交叉内容
 - P2(2): Auth 问题多处重复记录、policy.md 与 architecture.md §6A.5 内容重叠
 - P3(3): CEO 版本号过时(v4.2→v4.4)、backtest experience.md 过期注释、上报链用词偏差
 
@@ -65,7 +65,7 @@ done
 1. 创建 rules.md → policy.md 重定向文件
 2. 创建 exception-handling.md → incident-response.md 重定向文件
 3. 修正 architecture.md 中 rules.md/exception-handling.md/dept-*.md 引用
-4. 修正 election/README.md 中 6 处 "strategy-01~07" → "strategy-02~07（不含组长）"
+4. 修正 election/README.md 中 6 处 "strategy-director~07" → "strategy-02~07（不含组长）"
 5. 更新 docs/strategy/README.md 为部门级概览（标明 AGT-007 部分）
 6. 更新 ceo/README.md 版本号 v4.2 → v4.4
 7. 更新 backtest/README.md 上报链说明

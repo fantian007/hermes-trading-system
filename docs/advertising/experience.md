@@ -11,7 +11,7 @@
 **内容**: 21只候选股全 BULLISH 主导，分析师分配明细（MACD/RSI/布林带/海龟/均线等）。
 **卡片颜色**: 蓝色（状态/调度类）
 **发送方案**: 用内联 Node.js 脚本直接调飞书 API 代替 npx tsx 方式更可靠（避免 tsx 冷启动超时）。
-**去重**: 与上次 strategy-01 pool_analysis_assignment 卡片（10:49）间隔 < 30分钟但内容不同，属于新一轮分析分配，发送。
+**去重**: 与上次 strategy-director pool_analysis_assignment 卡片（10:49）间隔 < 30分钟但内容不同，属于新一轮分析分配，发送。
 **消息 ID**: om_x100b6e12c04cfd34b3412ab29ac0e73
 
 ## 2026-05-24 — BKT-001 第4轮CEO宣讲自检通知

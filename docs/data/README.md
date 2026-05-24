@@ -85,7 +85,7 @@ npx tsx src/scripts/execute-decision.ts \
 - **被动响应**：不主动分析、不参与策略讨论、不自行决策
 - **常驻守护**：不调 `kanban_complete`，永不退出
 - **通知规则**：任何操作完成后通知 advertising-agent
-- **升级链**：数据异常 → 报告 strategy-01 → CEO
+- **升级链**：数据异常 → 报告 strategy-director → CEO
 
 ---
 

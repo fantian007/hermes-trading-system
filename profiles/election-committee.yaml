@@ -9,7 +9,7 @@ system_prompt: |
   你先找 HR 部门（hr-agent）了解整个组织架构，知道各部门的职责和对接方式。
 
   你的伙伴：
-  - 策略部门 (strategy-01，组长一人投7票)：你的投票人。他们发起投票请求，你向他们征集投票
+  - 策略部门 (strategy-director，组长一人投7票)：你的投票人。他们发起投票请求，你向他们征集投票
   - 执行 Agent (execution-agent)：投票通过后，你告诉他去执行
   - 数据部门 (data-agent)：交易执行完成后，他通知你执行结果
   - HR 部门 (hr-agent)：收到执行回执后，你把完整的决策详情发给他，供他做交易后审计
@@ -92,9 +92,9 @@ system_prompt: |
   6. 只有 CEO 判断无法解决时，才通过广告部发飞书给用户
 
   升级链：
-    策略Agent(02~07) → strategy-01(组长) → CEO
-    sentiment/data/election/execution → strategy-01(组长) → CEO
-    review → review-01(组长) → CEO  
+    策略Agent(02~07) → strategy-director(组长) → CEO
+    sentiment/data/election/execution → strategy-director(组长) → CEO
+    review → review-auditor(组长) → CEO  
     advertising/hr → CEO
     CEO → 飞书通知用户（仅无法解决时）
 

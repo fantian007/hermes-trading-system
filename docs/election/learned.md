@@ -32,7 +32,7 @@ ELC-001 被设计为常驻守护进程（"不调 kanban_complete"），但 Herme
 |-------|------|------|
 | AGT-007 | 均线交叉策略分析官 | ACTIVE |
 | AGT-005 | 海龟交易策略官 | ACTIVE |
-| strategy-01 | 策略组长 | ACTIVE |
+| strategy-director | 策略组长 | ACTIVE |
 
 | AGT-002/004/008 已重新活跃（HR重建）。当前14个agents：5策略+1舆情+1选举+1执行+6审核。
 

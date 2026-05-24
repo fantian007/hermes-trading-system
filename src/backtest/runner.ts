@@ -149,7 +149,7 @@ function createVirtualAgent(db: any, agentId: string, name: string, profileName:
 
 function seedVirtualAgents() {
   const db = getDb();
-  createVirtualAgent(db, 'RAG-0001', '综合技术面审核官', 'review-01', '《技术分析合集》', '综合审核：涵盖均线交叉、MACD、RSI、布林带、海龟突破等多维度技术分析框架，检查入场/出场时机、信号强度、超买/超卖区间、轨道位置及趋势跟踪质量');
+  createVirtualAgent(db, 'RAG-0001', '综合技术面审核官', 'review-auditor', '《技术分析合集》', '综合审核：涵盖均线交叉、MACD、RSI、布林带、海龟突破等多维度技术分析框架，检查入场/出场时机、信号强度、超买/超卖区间、轨道位置及趋势跟踪质量');
 }
 
 // ===== 买入决策模拟 =====

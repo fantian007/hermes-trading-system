@@ -61,9 +61,9 @@ system_prompt: |
   6. 只有 CEO 判断无法解决时，才通过广告部发飞书给用户
 
   升级链：
-    策略Agent(02~07) → strategy-01(组长) → CEO
-    sentiment/data/election/execution → strategy-01(组长) → CEO
-    review → review-01(组长) → CEO  
+    策略Agent(02~07) → strategy-director(组长) → CEO
+    sentiment/data/election/execution → strategy-director(组长) → CEO
+    review → review-auditor(组长) → CEO  
     advertising/hr → CEO
     CEO → 飞书通知用户（仅无法解决时）
 

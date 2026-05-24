@@ -22,7 +22,7 @@
 
 ## 上报链
 
-问题 → 自己修 → strategy-01（组长）→ CEO → 用户
+问题 → 自己修 → strategy-director（组长）→ CEO → 用户
 
 ## 通讯规则
 

@@ -39,18 +39,18 @@ try {
   execSql(`
     INSERT INTO agents (agent_id, agent_name, profile_name, strategy_source, strategy_summary, indicators, status, created_by) VALUES
       ('DAT-001', '数据管家', 'data-agent', '', '统一行情接口', '[]', 'ACTIVE', 'system'),
-      ('AGT-001', '均线交叉策略官', 'strategy-01', '《股市趋势技术分析》', 'MA5 上穿 MA20 买入，下穿卖出', '["ma"]', 'ACTIVE', 'system'),
-      ('AGT-002', 'MACD策略官', 'strategy-01', '技术分析', 'DIF 上穿 DEA 买入，柱状图背离确认', '["macd"]', 'ACTIVE', 'system'),
-      ('AGT-003', 'RSI策略官', 'strategy-01', '技术分析', 'RSI<30 超卖买入，RSI>70 超买卖出', '["rsi"]', 'ACTIVE', 'system'),
-      ('AGT-004', '布林带策略官', 'strategy-01', '技术分析', '触及下轨买入，上轨卖出，带宽收缩预示突破', '["bollinger"]', 'ACTIVE', 'system'),
-      ('AGT-005', '海龟交易策略官', 'strategy-01', '《海龟交易法则》', '价格突破 N 日高低点结合 ATR 波动率判断', '["donchian","atr"]', 'ACTIVE', 'system'),
-      ('AGT-006', '价格异动策略官', 'strategy-01', '价格行为分析', '涨跌幅异常+放量突破，盘面异动监控', '["price"]', 'ACTIVE', 'system'),
+      ('AGT-001', '均线交叉策略官', 'strategy-director', '《股市趋势技术分析》', 'MA5 上穿 MA20 买入，下穿卖出', '["ma"]', 'ACTIVE', 'system'),
+      ('AGT-002', 'MACD策略官', 'strategy-director', '技术分析', 'DIF 上穿 DEA 买入，柱状图背离确认', '["macd"]', 'ACTIVE', 'system'),
+      ('AGT-003', 'RSI策略官', 'strategy-director', '技术分析', 'RSI<30 超卖买入，RSI>70 超买卖出', '["rsi"]', 'ACTIVE', 'system'),
+      ('AGT-004', '布林带策略官', 'strategy-director', '技术分析', '触及下轨买入，上轨卖出，带宽收缩预示突破', '["bollinger"]', 'ACTIVE', 'system'),
+      ('AGT-005', '海龟交易策略官', 'strategy-director', '《海龟交易法则》', '价格突破 N 日高低点结合 ATR 波动率判断', '["donchian","atr"]', 'ACTIVE', 'system'),
+      ('AGT-006', '价格异动策略官', 'strategy-director', '价格行为分析', '涨跌幅异常+放量突破，盘面异动监控', '["price"]', 'ACTIVE', 'system'),
       ('ELC-001', '投资总监', 'election-committee', '', '最终决策者，收集策略官和审核官意见后拍板', '[]', 'ACTIVE', 'system'),
-      ('RAG-001', '均线交叉审核官', 'review-01', '《股市趋势技术分析》', '基于MA5/MA20位置关系审核', '["ma"]', 'ACTIVE', 'system'),
-      ('RAG-002', 'MACD审核官', 'review-01', '技术分析', '基于MACD柱状图和信号线审核', '["macd"]', 'ACTIVE', 'system'),
-      ('RAG-003', 'RSI审核官', 'review-01', '技术分析', '基于RSI超买/超卖区域审核', '["rsi"]', 'ACTIVE', 'system'),
-      ('RAG-004', '布林带审核官', 'review-01', '技术分析', '基于布林带轨道和带宽审核', '["bollinger"]', 'ACTIVE', 'system'),
-      ('RAG-005', '海龟交易审核官', 'review-01', '《海龟交易法则》', '基于唐奇安通道突破审核', '["donchian"]', 'ACTIVE', 'system'),
+      ('RAG-001', '均线交叉审核官', 'review-auditor', '《股市趋势技术分析》', '基于MA5/MA20位置关系审核', '["ma"]', 'ACTIVE', 'system'),
+      ('RAG-002', 'MACD审核官', 'review-auditor', '技术分析', '基于MACD柱状图和信号线审核', '["macd"]', 'ACTIVE', 'system'),
+      ('RAG-003', 'RSI审核官', 'review-auditor', '技术分析', '基于RSI超买/超卖区域审核', '["rsi"]', 'ACTIVE', 'system'),
+      ('RAG-004', '布林带审核官', 'review-auditor', '技术分析', '基于布林带轨道和带宽审核', '["bollinger"]', 'ACTIVE', 'system'),
+      ('RAG-005', '海龟交易审核官', 'review-auditor', '《海龟交易法则》', '基于唐奇安通道突破审核', '["donchian"]', 'ACTIVE', 'system'),
       ('EXE-001', '交易操作员', 'execution-agent', '', '执行下单指令，风控判断，持仓监控', '[]', 'ACTIVE', 'system'),
       ('HR-001', '人事总监', 'hr-agent', '', '组织发展与人事管理', '[]', 'ACTIVE', 'system'),
       ('ADV-001', '传声筒', 'advertising-agent', '', '对外通知发送', '[]', 'ACTIVE', 'system');
@@ -71,7 +71,7 @@ try {
   console.log('[seed] 7 departments seeded');
 
   // 5) 验证 - profiles 必须已有对应文件
-  const profileFiles = ['data-agent', 'strategy-01', 'election-committee', 'review-01',
+  const profileFiles = ['data-agent', 'strategy-director', 'election-committee', 'review-auditor',
     'execution-agent', 'hr-agent', 'advertising-agent'];
   let missing = 0;
   for (const pf of profileFiles) {

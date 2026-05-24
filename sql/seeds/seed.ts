@@ -15,7 +15,7 @@ const presetAgents = [
   {
     agent_id: 'RAG-0001',
     agent_name: '均线交叉审核官',
-    profile_name: 'review-01',
+    profile_name: 'review-auditor',
     strategy_source: '《股市趋势技术分析》',
     strategy_summary: '审核框架：均线交叉审核。检查 MA5/MA20 在交易时间点的位置关系，判断入场/出场时机是否与技术信号匹配。',
     indicators: JSON.stringify(['ma']),

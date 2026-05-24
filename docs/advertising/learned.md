@@ -20,7 +20,7 @@
 **对广告部门无关但值得关注的变化**:
 - CEO 巡检诊断系统（每5分钟7项自检+自愈）
 - 回测部门 BKT-001（第9部门）
-- scheduling 由 strategy-01 接管（scheduler.ts 已删除）
+- scheduling 由 strategy-director 接管（scheduler.ts 已删除）
 - 投票并发控制（发起前检查 ELC 忙碌状态）
 
 ### 知识库结构确认

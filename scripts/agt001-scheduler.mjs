@@ -75,9 +75,9 @@ async function scheduleCycle(round) {
   
   // Step 2: Check all agent status
   const agentStatus = {};
-  const strategyAgents = ['strategy-01'];
+  const strategyAgents = ['strategy-director'];
   const otherAgents = ['sentiment-agent', 'election-committee', 'execution-agent', 'data-agent', 
-                       'review-01', 'backtest-agent', 'hr-agent', 'advertising-agent', 'ceo-agent'];
+                       'review-auditor', 'backtest-agent', 'hr-agent', 'advertising-agent', 'ceo-agent'];
   
   for (const agent of [...strategyAgents, ...otherAgents]) {
     const agentTasks = tasks.filter(t => t.assignee === agent);
