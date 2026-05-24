@@ -689,7 +689,7 @@ agent_weight = win_rate × log₂(1 + total_trades)
 
 ### 6.1 中心调度器（已移除）— ~~`scheduler.ts`~~
 
-> **v4.3 移除**: `scheduler.ts` 已删除（commit f53aea0）。原调度职责由 strategy-01（策略部门组长）通过 scheduler-agent profile 接管。调度循环改为 `scripts/scheduler-loop.sh`，每3分钟执行 `hermes chat -q --yolo`。
+> **v4.3 移除**: `scheduler.ts` 已删除（commit f53aea0）。原调度职责已合并到 strategy-01 中（策略组长兼调度器），见 `profiles/strategy-01.yaml`。
 
 原设计：中心调度器作为常驻 Node.js 守护进程，定时扫描全股池、触发策略分析、推送广告通知。该流程现在由 strategy-01 Agent 通过 Kanban 任务驱动，不再依赖独立 TypeScript 进程。
 
@@ -1152,12 +1152,12 @@ npx tsx sql/seeds/seed.ts
 
 ### 注册 12 个 Agent Profiles
 ```bash
+hermes profile create -f profiles/sentiment-agent.yaml
 hermes profile create -f profiles/data-agent.yaml
-hermes profile create -f profiles/selector-price.yaml
-hermes profile create -f profiles/watch-agent.yaml
+hermes profile create -f profiles/sentiment-agent.yaml
 hermes profile create -f profiles/election-committee.yaml
 hermes profile create -f profiles/execution-agent.yaml
-hermes profile create -f profiles/auditor-agent.yaml
+hermes profile create -f profiles/strategy-01.yaml
 hermes profile create -f profiles/review-01.yaml
 ```
 

@@ -75,7 +75,7 @@ async function scheduleCycle(round) {
   
   // Step 2: Check all agent status
   const agentStatus = {};
-  const strategyAgents = ['strategy-02', 'strategy-03', 'strategy-04', 'strategy-05', 'strategy-06', 'strategy-07'];
+  const strategyAgents = ['strategy-01'];
   const otherAgents = ['sentiment-agent', 'election-committee', 'execution-agent', 'data-agent', 
                        'review-01', 'backtest-agent', 'hr-agent', 'advertising-agent', 'ceo-agent'];
   
