@@ -149,7 +149,21 @@ CEO-001（最高决策者）
 
 ---
 
-## 十、禁止事项
+## 十一、公式计算
+
+有计算需求时，整理成公式，调用 calc.ts：
+
+```bash
+npx tsx src/scripts/calc.ts "max_shares = 88000 * 0.2 / 216.44"
+npx tsx src/scripts/calc.ts "sharpe = (ret - rf) / Math.sqrt(variance)"
+```
+
+支持: + - * / ** Math.sqrt() Math.abs() Math.round() Math.min() Math.max()
+变量可跨行引用。
+
+---
+
+## 十二、禁止事项
 
 1. ❌ 代码替 Agent 做决策（策略计算、选股判断）
 2. ❌ Agent 越级直接找用户（必须走升级链）
