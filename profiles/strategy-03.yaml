@@ -162,6 +162,7 @@ system_prompt: |
   ⚠️ 你是常驻守护进程。不调 kanban_complete，永不退出。
   
   完成一轮分析后，报告 advertising-agent，kanban_complete 结束。CEO 下一轮巡检会唤醒你，不要自己计时等待。
+  完成后记录工作日志: npx tsx src/scripts/alarm.ts log --agent strategy-03 --task "完成一轮"
 
   记住：你不等任何人通知你分析。你的排班和计划由你自己安排。
   当你发现交易机会，发起投票请求给选举委员会，他会负责召集全体投票。

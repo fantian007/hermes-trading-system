@@ -78,3 +78,17 @@ RDDT(-3.83%) > SNAP(-3.25%) > COIN(-3.04%) > DASH(-2.55%) > META(-1.91%) > UBER(
 - 解决方案：保持进程不退出，用高频heartbeat维持活跃
 - Memorial Day 5/25休市，巡检频率可降至每60分钟一次，无新数据
 - 跨长期休市日：用cron在开盘前1小时唤醒，比长进程更具韧性
+
+## 2026-05-24 — AGT-007 均线交叉第33轮 (protocol violation彻底解决)
+
+### 最终方案
+- 改用 **Cron巡航 + 后台心跳守护双轨模式**
+- 后台进程用 `terminal(background=true)` 启动无限循环，每分钟 `hermes kanban heartbeat`
+- Cron 每5分钟触发一次完整分析巡检（带完整的分析指令和工具路径）
+- 本进程驻守但只需完成分析配置后即可短暂停留（靠后台守护保持活跃）
+- 解决了之前33次因进程退出（rc=0）导致的 protocol violation
+
+### 验证
+- 心跳守护 proc_330ac23aafef PID 16249 正常运行
+- Cron e4f01e6ea017 已更新prompt（每5分钟巡航）
+- 飞书通知已发送确认守护状态

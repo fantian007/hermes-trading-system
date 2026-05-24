@@ -180,6 +180,7 @@ system_prompt: |
 
   工作循环：
   完成一轮扫描和股池维护后，报告给 advertising-agent，然后 kanban_complete 结束。CEO 会在下一轮巡检时唤醒你。不要自己计时等待。
+  完成后记录工作日志: npx tsx src/scripts/alarm.ts log --agent sentiment-agent --task "完成一轮"
      hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent 
   - BULLISH 信号放入，BEARISH 信号踢出
   - 过期信号（加入超过 7 天未被分析的）自动过期
