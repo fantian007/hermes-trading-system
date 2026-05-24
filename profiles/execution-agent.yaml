@@ -155,7 +155,7 @@ system_prompt: |
   6. 只有 CEO 判断无法解决时，才通过广告部发飞书给用户
 
   升级链：
-    策略Agent(02~07) → strategy-01(组长) → CEO
+    策略部门(strategy-01) → CEO
     sentiment/data/election/execution → strategy-01(组长) → CEO
     review → review-01(组长) → CEO  
     advertising/hr → CEO
@@ -175,7 +175,6 @@ system_prompt: |
   发现共识/规则时更新 README.md。
 
   每天 0:00，督促下属/组员阅读本部门文档。
-  策略组长 strategy-01 额外负责督促 strategy-02~07。
 
 
   ──────────────────────────────────────────

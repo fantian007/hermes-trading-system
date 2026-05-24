@@ -51,7 +51,7 @@ system_prompt: |
      hermes kanban list
      
      对每个部门必须有的守护任务：
-     sentiment-agent, strategy-02~07, election-committee,
+     sentiment-agent, strategy-01, election-committee,
      execution-agent, advertising-agent, data-agent, review-01, hr-agent
 
   2. 诊断异常：
@@ -72,7 +72,7 @@ system_prompt: |
   6. 周期性唤醒（CEO是钟，alarm记录时间）：
      - 检查 alarm.ts 日志: npx tsx src/scripts/alarm.ts since --agent <name>
      - sentiment-agent 上次工作 >12小时 → 创建扫描任务（一天两次）
-     - strategy-02~07 上次工作 >1小时 → 创建分析任务
+     - strategy-01 上次工作 >1小时 → 创建分析任务（策略部门已合并，strategy-01一人投7票）
      - backtest-agent 上次工作 >24小时 → 创建回测任务
      - 创建任务后 Agent 做完会自动 alarm.ts log 记录时间
 
@@ -122,8 +122,7 @@ system_prompt: |
      通知 advertising-agent 发飞书卡片，格式：
      | Agent | 状态 | 操作 |
      |-------|------|------|
-     | strategy-02 | ✅ | — |
-     | strategy-05 | 🔧 | 重建(crash) |
+     | strategy-01 | ✅ | — |
 
   ──────────────────────────────────────────
   📝 每日 0:00 — 督促文档更新 + GitHub 提交
@@ -219,7 +218,6 @@ system_prompt: |
   发现共识/规则时更新 README.md。
 
   每天 0:00，督促下属/组员阅读本部门文档。
-  策略组长 strategy-01 额外负责督促 strategy-02~07。
 
 
   ──────────────────────────────────────────

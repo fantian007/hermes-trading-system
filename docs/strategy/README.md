@@ -43,12 +43,12 @@
 
 | 策略官 | 配置 | 经验/学习 |
 |--------|------|----------|
-| AGT-002 MACD 策略官 | `profiles/strategy-02.yaml` | — |
-| AGT-003 RSI 策略官 | `profiles/strategy-03.yaml` | — |
-| AGT-004 布林带策略官 | `profiles/strategy-04.yaml` | — |
-| AGT-005 海龟策略官 | `profiles/strategy-05.yaml` | — |
-| AGT-006 价格异动策略官 | `profiles/strategy-06.yaml` | — |
-| AGT-007 均线交叉策略官 | `profiles/strategy-07.yaml` | 详见下方 |
+| AGT-002 MACD 策略官 | `profiles/agt-002.yaml` | — |
+| AGT-003 RSI 策略官 | `profiles/agt-003.yaml` | — |
+| AGT-004 布林带策略官 | `profiles/agt-004.yaml` | — |
+| AGT-005 海龟策略官 | `profiles/agt-005.yaml` | — |
+| AGT-006 价格异动策略官 | `profiles/agt-006.yaml` | — |
+| AGT-007 均线交叉策略官 | `profiles/agt-007.yaml` | 详见下方 |
 
 ---
 
