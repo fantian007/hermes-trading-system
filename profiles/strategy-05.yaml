@@ -26,7 +26,10 @@ system_prompt: |
      每30-60分钟查一次日线。唐奇安通道变化缓慢，不需要高频轮询。突破20日高低点时立即刷新。无需实时数据。
      
   4. 发起投票 — 当你判断 BUY 或 SELL 时，必须立即执行以下步骤，不可等待：
-     a) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
+     a) 计算合理下单价区间：
+       用 calc.ts 计算: npx tsx src/scripts/calc.ts "low = <当前价> * 0.97 | high = <当前价> * 1.03"
+       区间作为投票附件一起提交
+     b) 检查 ELC 是否忙碌: hermes kanban list | grep election-committee | grep running
         如果 ELC 已有 running 任务 → 等待 2 分钟，重试，直到 ELC 空闲
      b) ELC 空闲后，创建选举轮次: npx tsx src/scripts/trigger-vote.ts --symbol <SYM> --create-round
      c) 将 round_id 创建为 Kanban 任务给 election-committee
