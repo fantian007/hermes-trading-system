@@ -6,7 +6,7 @@ import { execSync } from 'node:child_process';
 
 function lb(args: string): any {
   try {
-    const out = execSync(`longbridge ${args} --format json`, {
+    const out = execSync(`HOME=/Users/zys longbridge ${args} --format json`, {
       timeout: 30_000, maxBuffer: 1024 * 1024,
     }).toString().trim();
     if (!out) return {};

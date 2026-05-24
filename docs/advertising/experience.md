@@ -146,9 +146,33 @@
 |5. 发送后立即更新 /tmp/hermes_ad_last.json 缓存|
 
 
+## 2026-05-24 — 死单通知成功发送
+
+**问题**: 执行部门发现死单 ELEC-20260523-2035 (AAPL.US BUY)，需通知用户并触发选举委员会重新投票。
+**操作**: 使用紫色模板发送飞书卡片，卡片包含死单编号、标的、操作、状态和选举委员会任务 ID。
+**结果**: 卡片成功发送，message_id: om_x100b6e150bd77ca4b251f071c6664b3
+**注意**: 发送卡片时卡 JSON 中不要包含 emoji variation selectors (VS1-256)，否则安全扫描会拦截。使用 ASCII 文本替代。
+
 ## 2026-05-24 — send-card.ts 用法纠正
 
 - send-card.ts 从 **stdin** 读取卡 JSON，不是从 `--card` 文件参数
 - 正确用法: `cat card.json | npx tsx src/scripts/send-card.ts`
 - 错误用法: `npx tsx src/scripts/send-card.ts --card card.json` (会导致 "Unexpected end of JSON input")
 - 已更新到 memory：明确写死了"shebang 是误导性"应当用 stdin
+
+---
+
+## 2026-05-24 — SMCI.US BUY 风控通过通知
+
+**事件**: 执行部门 EXE-001 完成 SMCI.US BUY 风控审查，通知广告部门推送飞书卡片给用户。
+
+**操作**: 
+- 使用绿色模板（交易/盈利）发送卡片
+- 卡片包含选举轮次、股票、操作、参考价、风控状态、数据执行任务信息
+- 追加休市提示（周日休市，周一开盘成交）
+
+**结果**: 卡片成功发送，message_id: om_x100b6e11d11fd480b375d1091fb6ae7
+
+**经验**: 
+- BUY 交易通知按去重规则第3条跳过所有去重检查，直接发送
+- 考虑到休市情况，在卡片中附加温馨提示让用户了解执行时间线

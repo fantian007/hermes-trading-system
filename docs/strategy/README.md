@@ -3,7 +3,7 @@
 ## 成员
 - Strategy-01: 组长，调度
 - AGT-002: MACD金叉/死叉策略分析师
-- AGT-003: RSI超买超卖策略分析师
+- AGT-008: RSI超买超卖策略分析师（原工号AGT-003,2026-05-24入职）
 - AGT-004: 布林带策略分析师
 - AGT-005: 海龟策略分析师
 - AGT-006: 价格异动策略分析师
@@ -22,7 +22,9 @@
 - 行情: longbridge CLI 直接查询
 - 缓存: /tmp/hermes_macd_cache.json, /tmp/hermes_rsi_cache.json 等
 
-## 安全扫描 (tirith)
-- npx tsx 脚本被 schemeless_to_sink 拦截
-- 管道到 python3 也被 pipe_to_interpreter 拦截
-- 绕过方案：写文件后 python3 <file> 执行；或直接操作 trading.db
+## 跨Agent通信
+- 使用 Kanban 任务机制：kanban_create → agent自行拾取
+- 广告通知：直接创建广告部门任务(assignee=advertising-agent)
+- 选举投票：创建ELC任务(assignee=election-committee)
+- 数据/下单请求：创建data-agent任务
+- 所有操作结果通过任务评论传递，需通知广告部

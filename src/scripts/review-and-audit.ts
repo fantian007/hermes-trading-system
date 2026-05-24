@@ -2,32 +2,61 @@
  * 交易事后审计数据提供者
  *
  * 职责（仅此一项）：
- *   加载交易详情 + 选举委员会推理过程 + Agent 投票数据，
+ *   加载交易详情 + 选举委员会推理过程 + Agent 投票数据 + 标的 K 线价格序列，
  *   输出 JSON 上下文供 Review Agent 做自然语言审计。
+ *
+ * K 线通过 data-service.ts 子进程获取，支持审核 Agent 做 MACD/RSI/布林带等技术审核。
  *
  * 不输出任何 verdict 模板——Agent 自己决定怎么审核。
  *
  * 用法：
  *   npx tsx src/scripts/review-and-audit.ts --trade-id TRD-20260521-001
+ *   npx tsx src/scripts/review-and-audit.ts --trade-id TRD-20260521-001 --kline-days 100
  */
 
+import { execSync } from 'node:child_process';
 import { getDb } from '../core/db.js';
 
 interface Args {
   tradeId: string;
+  klineDays: number;
 }
 
 function parseArgs(): Args {
   const args = process.argv.slice(2);
-  const idx = args.indexOf('--trade-id');
-  return { tradeId: idx >= 0 ? args[idx + 1] : '' };
+  const get = (key: string) => {
+    const idx = args.indexOf(`--${key}`);
+    return idx >= 0 ? args[idx + 1] : '';
+  };
+  return {
+    tradeId: get('trade-id'),
+    klineDays: parseInt(get('kline-days'), 10) || 100,
+  };
+}
+
+/**
+ * 通过 data-service.ts 子进程获取 K 线数据
+ * 留 30s 超时 + 错误容错，网络失败时不阻断审计主流程
+ */
+function fetchKlines(symbol: string, days: number): any[] | null {
+  try {
+    const scriptPath = new URL('./data-service.ts', import.meta.url).pathname;
+    const out = execSync(
+      `npx tsx ${scriptPath} --type kline --symbol ${symbol} --days ${days}`,
+      { timeout: 30_000, maxBuffer: 1024 * 1024 },
+    ).toString().trim();
+    const parsed = JSON.parse(out);
+    return parsed?.klines ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function main() {
-  const { tradeId } = parseArgs();
+  const { tradeId, klineDays } = parseArgs();
 
   if (!tradeId) {
-    console.error('Usage: review-and-audit.ts --trade-id <TRADE_ID>');
+    console.error('Usage: review-and-audit.ts --trade-id <TRADE_ID> [--kline-days 100]');
     process.exit(1);
   }
 
@@ -48,8 +77,11 @@ async function main() {
     'SELECT * FROM agent_votes WHERE trade_id = ? OR round_id = ? ORDER BY voted_at'
   ).all(tradeId, trade.approved_by) as any[];
 
-  // 4. 输出原始数据——Agent 自己判断
-  const context = {
+  // 4. 获取标的 K 线价格序列（用于技术指标审核）
+  const klines = fetchKlines(trade.symbol, klineDays);
+
+  // 5. 输出原始数据——Agent 自己判断
+  const context: Record<string, any> = {
     trade: {
       trade_id: trade.trade_id,
       symbol: trade.symbol,
@@ -87,8 +119,18 @@ async function main() {
       voted_at: v.voted_at,
       is_shadow: !!v.is_shadow,
     })),
-    // 不再包含 instruction 模板——Agent 自己审核、自己决定 verdict
   };
+
+  // 如果成功获取到 K 线数据，按时间倒序输出（最新在前），
+  // 审核 Agent 可据此计算 MACD/RSI/布林带等技术指标
+  if (klines && klines.length > 0) {
+    context.kline = {
+      symbol: trade.symbol,
+      count: klines.length,
+      days_requested: klineDays,
+      records: klines,
+    };
+  }
 
   console.log(JSON.stringify(context, null, 2));
 }
