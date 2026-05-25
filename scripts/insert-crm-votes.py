@@ -1,8 +1,9 @@
-import sqlite3, sys, json
+import sqlite3, sys, json, math
 
 # Direct SQLite insert — no dependency on terminal CWD
 db_path = "/Users/zys/workspace/hermes-trading-system/data/trading.db"
 conn = sqlite3.connect(db_path)
+conn.row_factory = sqlite3.Row
 c = conn.cursor()
 
 round_id = "ELEC-20260524-1210"

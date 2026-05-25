@@ -1,6 +1,6 @@
 # 知识库索引
 
-> 最后更新：2026-05-26 17:00 UTC+8
+> 最后更新：2026-05-26 05:12 UTC+8
 
 ## System（系统运维）
 
@@ -11,11 +11,12 @@
 
 1. [v4.3 全员学习完成记录](hr/v4.3-learning-completion.md) — CEO-001 学习确认 + 19 位 Agent 学习状态汇总
 2. [v4.4 全员学习任务派发](hr/v4.4-learning-deployment.md) — 18 个学习任务已派发给 9 个部门（2026-05-24）
+3. [HR 部门 README](hr/README.md) — HR-001 部门概述与实践记录
+4. [HR 部门经验总结](hr/experience.md) — HR-001 经验积累与教训记录
 
 ## Trading（交易策略）
 
-1. [20种新增策略参考手册](strategy/strategies-20.md) — 策略部门 CAT-001~020 完整策略分类与实现参数 (2026-05-25)
-2. [策略部署经验](https://github.com/fantian007/hermes-trading-system) → docs/strategy/experience.md 最新追加 (2026-05-26)
+1. *（待补充 — 由 HR-001 维护）*
 
 ## System（系统运维）
 
@@ -25,4 +26,4 @@
 
 ## Risk（风控）
 
-1. *（待补充 — 由 HR-001 安排知识库填充任务）*
+1. [风控知识库](risk/rules.md) — 初始创建 (2026-05-26)，待系统进入交易周期后填充

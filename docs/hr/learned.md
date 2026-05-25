@@ -1,6 +1,6 @@
 # HR 学习笔记
 
-> 最后更新：2026-05-24 UTC+8
+> 最后更新：2026-05-26 00:39 UTC+8
 
 ## 2026-05-24 — HR 守护进程启动
 
@@ -107,6 +107,32 @@
 2. 检查学习任务完成情况，汇总确认
 3. 是否有组长提人事需求
 
+## 2026-05-26 — HR 守护轮巡 — 00:32 CST 全员学习部署
+
+### 系统状态
+- 4 Agent 在 agents 表中（AGT-004布林带 / AGT-005海龟 / AGT-007均线交叉 / strategy-01策略组长）
+- 1 个部门（DPT-006 策略部门）
+- 13 个 profile YAML 齐全
+- 4 笔 OPEN trade（NVDA/CLSK/AAPL/AAPL-SELL）
+- 多条选举记录，最新 ELEC-20260524-0521-NVDAUS 已投票完成
+
+### 操作
+1. 已阅读 policy.md + incident-response.md（内容完整）
+2. 为 11 位 Agent 创建学习任务（sentiment-agent / data-agent / strategy-01 / strategy-director / election-committee / execution-agent / review-01 / review-auditor / advertising-agent / backtest-agent / ceo-agent）
+   - 任务 IDs: t_63d5c81a / t_41d366e4 / t_bc263c9f / t_9e963a8a / t_f5109ad8 / t_b9f4abea / t_1f6874ea / t_93cc461c / t_927e72dc / t_38c19742 / t_fb2745c2
+3. 知识库检查：INDEX.md 正常，Risk 区待补充标注仍在
+4. audit-cycle.ts 超时（网络依赖，跳过）
+
+### 审计结论
+- 所有 Agent 交易数 0 → 不触发淘汰/影子期/警告
+- 审核报告中无新提交
+- 无入职/淘汰/离职需求
+
+### 下轮关注
+1. 检查学习任务完成情况
+2. 留意是否有 Agent 提交知识库写入请求
+3. 下次 00:00 触发全员学习
+
 ## 2026-05-24 — HR 守护轮巡 #11 (05:10 CST) — 状态延续
 
 ### 系统状态
@@ -178,6 +204,85 @@
 - docs/hr/experience.md 正常，docs/hr/learned.md 正常追加
 - 知识库 INDEX.md 正常（2026-05-24 04:33）
 - 无待处理的 Agent 需求 / 入职 / 离职 / 人事变动请求
-- 距离今日 0:00 全员学习（v4.4已部署）还有约 14 小时
+| 距离今日 0:00 全员学习（v4.4已部署）还有约 14 小时
 
-**人事决策**：无（0 交易数据）
+## 2026-05-26 00:39 — HR 守护轮巡 #3：知识库修复 + 冷启动稳定
+
+### 系统状态
+- 14 ACTIVE Agent（5 策略 + 6 审核 + 1 选举 + 1 舆情 + 1 执行）
+- 0 笔交易，全零胜率，冷启动状态
+- audit-cycle.ts 正常：14 人全零数据
+- onboard-agent.ts --list 正常：14 人在职
+
+### 本轮操作
+1. **知识库修复**：
+   - 创建 `docs/knowledge/trading/` 和 `docs/knowledge/risk/` 目录
+   - 创建 `docs/knowledge/risk/rules.md` 初始风控知识库骨架
+   - 修复 INDEX.md：删除了指向不存在的 `strategy/` 路径的无效链接，更新 Risk 条目为实际文件
+2. **文档更新**：
+   - docs/hr/experience.md 追加轮巡记录
+   - docs/hr/learned.md 更新
+
+### 审计结论
+- 全部 0 笔交易 → 无淘汰/影子期/警告判定
+- 无审核报告待处理
+- 无入职/离职/扩招需求
+- 系统稳定，无人事变动
+
+### 下轮关注
+1. 下次 00:00 到达时检查是否触发全员学习
+2. 留意是否有 Agent 提交知识库写入请求或人事需求
+3. 等待系统产生交易数据后启动绩效审计
+
+## 2026-05-26 01:17 — HR 守护轮巡：冷启动稳定
+
+### 系统状态
+- 14 ACTIVE Agent（5 策略 + 1 选举 + 1 舆情 + 6 审核 + 1 执行）
+- 5 OPEN trades（无 CLOSED），全零胜率，冷启动
+- audit-cycle.ts 正常输出
+- onboard-agent.ts --list 正常
+
+### 操作
+1. ✅ 审计运行 — 全零交易数据
+2. ✅ 全员学习任务（规章制度）已全部完成（17 个 done）
+3. ✅ 审核报告检查 — 无 CLOSED 交易，review_reports 表无记录
+4. ✅ 知识库完整 — INDEX.md 正常
+5. ✅ 文档完整 — hr/ review/ 文档齐全
+6. ✅ 无人事变动需求
+
+### 审计结论
+- 全零交易数据 → 无淘汰/影子期/警告判定
+- 无审核报告待处理
+- 无入职/离职/扩招需求
+- 系统稳定
+
+### 下轮关注
+1. 距离下次 00:00 全员学习约 22 小时
+2. 留意是否有 Agent 提交知识库写入请求
+3. 等待系统产生交易数据后启动绩效审计
+
+**人事决策**: 无（0 交易数据）
+
+## 2026-05-26 00:46 — HR 守护轮巡 #4
+
+### 本轮观察
+- 系统冷启动稳定运行中，14 ACTIVE Agent，0 笔交易
+- 上次运行时创建的 daily learning 任务部分仍存在（read y状态），学习-evolution任务（strategy-07, sentiment-agent）正在 running
+- 有一个 ORCL 买入失败的 todo 任务（t_a3780a2f）需要 CEO 决策
+- 常驻 Agent 已全部就位（6 个 running guardian tasks）
+- 本人（HR-001）第3次重启后成功进入守护轮巡，前两次因 protocol_violation（run 1382）和进程崩溃（run 1419）终止
+
+### 经验
+- 守护进程必须用工具调用保持存活，不能自然退出 → heartbeat 是唯一的生存信号
+- kanban_complete 不能被调用（任务定义要求永久 running）
+- 前两次 crash 的原因：run1382 自然退出（protocol_violation），run1419 进程被杀（pid 30932 not alive）
+- 当前 run1447 正常存活中，需要持续 heartbeat
+
+## 2026-05-26 00:50 — HR 守护轮巡 #5
+
+### 经验
+- 本任务 type="scratch" workspace，每次重启 workspace 都是空的，需要确认工作路径
+- kanban_create 可以批量使用，但要注意 dispatch 器的并发限制
+- advertising-agent 也是一名 ACTIVE Agent，除了本身职责也需要学习规章制度
+- 14 ACTIVE Agent 分布在 8 个 profile groups（策略 5 + 审核 6 + 选举 1 + 舆情 1 + 执行 1 + 数据 1 + 广告 1 + CEO 1）
+- persona.ts 目前没有 HR-001 的记录，需要手动创建

@@ -1,16 +1,25 @@
 {
-  "cycle": 4,
-  "timestamp": "2026-05-24T03:42:43.302Z",
+  "cycle": 22,
+  "timestamp": "2026-05-25T17:20:21.141Z",
   "newElectionRounds": "none",
-  "pendingExecutions": [
-    {
-      "roundId": "ELEC-20260524-1210",
-      "symbol": "CRM.US",
-      "decision": "BUY",
-      "confidence": "0.65"
-    }
-  ],
+  "pendingExecutions": "none",
   "openTrades": [
+    {
+      "trade_id": "ELEC-20260525-1634",
+      "symbol": "CRM.US",
+      "direction": "LONG",
+      "status": "OPEN",
+      "buy_price": "180.07",
+      "quantity": "1"
+    },
+    {
+      "trade_id": "TRD-20260524-5BEF",
+      "symbol": "CLSK.US",
+      "direction": "LONG",
+      "status": "OPEN",
+      "buy_price": "15.4",
+      "quantity": "1"
+    },
     {
       "trade_id": "TRD-20260524-442",
       "symbol": "AAPL.US",

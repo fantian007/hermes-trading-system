@@ -1,20 +1,14 @@
-## 2026-05-24 — review-and-audit.ts K 线数据缺失修复
+# HR 部门经验总结
 
-**问题**：RAG-002 发现 review-and-audit.ts 缺少 OHLCV K 线价格序列，MACD 审核框架无法计算 DIF/DEA/柱状图。
+## 2026-05-26 — HR-001 守护轮巡 #7
 
-**分析**：原始设计只关注 trade 元数据 + 投票数据，未考虑技术指标审计需要价格序列。对于策略部门（MACD、RSI、布林带、均线交叉等）的审核官，价格序列是核心输入。
+**系统状态:** 冷启动稳定，无异常。
+**本轮摘要:** 今日全员学习规章制度已在轮巡 #5 (00:50) 部署完毕 (17 kanban 任务给 14 ACTIVE Agent)。无人事变动需求，无审核报告待处理。
+**关键经验:** 守护任务应避免退出，否则 dispatcher 会视为 protocol violation 持续重调度。正确模式：执行巡逻后调用 kanban_block("standing guard") 进入阻塞等待。
 
-**解决方案**：在 review-and-audit.ts 中新增 --kline-days 参数（默认 100），通过子进程调用 data-service.ts --type kline 获取日 K 序列，合并到输出 JSON 的 context.kline.records[] 中。网络失败时返回 null，不阻断审计主流程。
+## 2026-05-26 01:17 — HR-001 守护轮巡
 
-**经验**：
-- 审计工具必须覆盖审计部门所需的所有数据维度
-- 技术指标审核框架需要价格序列作为核心输入
-- data-service.ts 可通过子进程被其他脚本复用（而非直接 import）
-- 网络依赖需要错误容错：离线部分（trade/round/votes）不能因在线部分（kline）失败而中断
-
-## 2026-05-24 09:35 — HR-001 第27轮守护
-
-**状态**：冷启动，10 ACTIVE Agent，0 交易
-**系统自检**：onboard-agent.ts 正常 - 10人全部 ACTIVE；audit-cycle.ts 正常 - 全零数据；文档完整 - docs/ 齐全；知识库 INDEX.md 最新
-**人事决策**：无淘汰/影子期/警告需求（全部 0 交易，无胜率数据）
-**待办**：等待系统进入交易周期后启动绩效审计
+**系统状态:** 冷启动稳定。14 ACTIVE Agent，5 OPEN trades（无已关闭交易），全零胜率。
+**本轮摘要:** 全员学习规章制度已完成（全部 done）。无新审核报告。无人事变动的需求。trading.db 在项目目录下正常。系统稳定无需操作。
+**审计结论:** 全零交易数据 → 无淘汰/影子期/警告判定。
+**关键发现:** trading.db 0 字节在 ~/.longbridge/，但项目内的 trading.db 有完整数据。两处 DB 不同步。

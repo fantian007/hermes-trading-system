@@ -53,4 +53,35 @@
 - 交易在休市期通过风控时，data-agent 创建预约任务，实际执行在下一个交易日
 - ADV-001 收到通知后无需立即发送，只需注册等待状态、保持心跳
 - 后续交易卡片用 **绿色**（交易/买入）
-- 如果 EXE-001 的通知在 data-agent 执行前到达，说明只是状态通告，注意判断实际交易是否已发生
+# 如果 EXE-001 的通知在 data-agent 执行前到达，说明只是状态通告，注意判断实际交易是否已发生
+# ```
+
+## 2026-05-26 — ORCL.US BUY 失败通知（longbridge skill缺失）
+
+**背景：** ORCL.US BUY 1 股执行失败，原因：longbridge skill 未配置。原任务 t_f9d134be 已归档（70+次崩溃后清理）。
+
+**处理流程：**
+1. 去重检查：last cache 为 pool_maintenance（01:00），不同事件 → 发送
+2. 卡片类型：橙色（警告/系统失败）
+3. 发送方式：build card JSON → `cat /tmp/orcl_fail_card.json | npx tsx src/scripts/send-card.ts`
+4. 发送成功（message_id: om_x100b6e738a91f138c45c7341613ad67）
+5. 按升级链通知 CEO（kanban_create t_a3780a2f），由CEO决策是否需用户介入
+
+**经验：**
+- longbridge skill 缺失属于系统配置问题，广告部无法自愈 → 必须升级给CEO
+- 橙色卡片适合交易执行类失败（非熔断级别）
+| 73|- 卡片中明确指出需要用户决定的选项（重新买入/放弃），方便CEO/用户快速决策
+
+## 2026-05-26 — ADV-001 连续 crash 后重跑的频繁去重
+
+**背景：** CEO每日报告任务 t_c2e06486 在 00:31–00:44 间连续 crash 4 次（pid 11151, 22439, 36190, 41800），dispatch 每次重跑都看到任务已由 run 1389 发送完成，然后去重跳过。
+
+**症状：**
+- 同一任务 4 次被 dispatch → spawn → crash → reclaim → 再次 spawn 循环
+- crash 原因："pid not alive" — 可能是子进程 OOM 或 daemon.ts 资源竞争
+- 每次重跑都正确进行了去重判断并跳过，不产生重复飞书消息
+
+**经验：**
+- 去重逻辑在这种 crash-reclaim 循环中至关重要 — 避免同一内容重复推送
+- 如果自己连续 crash 重建，无需每次重新发飞书通知，评论记录即可
+- 建议持续 crash > 5 次/小时 → 升级给 CEO 判断是否需要重建 profile

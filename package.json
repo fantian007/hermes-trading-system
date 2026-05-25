@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "AI Electoral Trading System — 19 Agents · 8 Departments · Natural Language Decisions · Multi-Agent automated trading with Hermes Kanban",
   "private": true,
+  "private": true,
   "type": "module",
   "scripts": {
     "db:init": "tsx sql/init.ts",

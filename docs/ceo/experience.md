@@ -113,6 +113,22 @@ done
 3. Git提交前检查 .gitignore 是否覆盖了所有不应提交的文件（如 *.db 已有规则）
 4. 空知识库目录（trading, risk）可安全删除——内容由HR填充
 
+---
+
+### 2026-05-26 — 巡检发现 t_f9d134be (ORCL.US BUY) 因 `--skills longbridge` 崩溃70+次后归档
+
+**问题**: election-committee 在创建执行交易任务时带了 `--skills longbridge`。execution-agent 没有这个 skill，每次 spawn 后立即 crash（exit code 1），dispatcher 重试70+次后最终归档为 cancelled。
+
+**教训**: 
+- 这个根因在2026-05-24的经验文档中已有记录（同一天的第2条），但选举委员会没有得到这个信息
+- 关键是：经验记录在 CEO 文档中是不够的——创建交易任务的代码（trigger-vote.ts 或 election-committee 创建任务的地方）必须硬编码禁止加 `--skills longbridge`
+- 需要检查所有创建子任务的地方，确保没有其他 `--skills longbridge` 残留
+
+**修复措施**:
+1. 创建通知任务给广告部告知用户 ORCL BUY 失败
+2. 记录到经验文档
+3. 后续应检查 election-committee 创建任务的代码
+
 ### 2026-05-26 — ORCL 死循环崩溃教训
 
 **症状**: ORCL 买1股任务 (t_f9d134be) 从 2026-05-23 23:37 开始运行，执行部按旧架构（不是daemon模式）被派遣，但每次 `npx tsx src/scripts/execute-decision.ts` 都因 Hermes 安全沙箱的 `tirith:schemeless_to_sink` 规则拦截而 exit code 1 崩溃。由于任务 max_runtime=86400s，派遣器不断重试 → 累计 1000+ 次 crash，浪费大量计算资源。
@@ -126,3 +142,19 @@ done
 **根因**: 执行部 profile 的 `toolsets: [hermes-cli]` 限制下，terminal 工具被安全规则拦截。执行部的 system prompt 要求它通过 data-agent 走 API，不直接操作 Longbridge CLI——这是正确的设计，但原始任务直接要求执行部执行 `execute-decision.ts` 违反了这一规则。
 
 **修复**: 创建 daemon 重新处理，并存档旧任务。
+
+### 2026-05-26 — 文档命名审查经验
+
+**任务**: t_d5770d09 — 审查 docs/ 下全部文件的命名合理性
+
+**发现并修复的问题**:
+1. **P1** — `strategies-20.md` 实际含21种策略(CAT-001~021)，文件名过时 → 更名为 `strategies-21.md`，同步更新 INDEX.md 和 strategy/learned.md 引用
+2. **P2** — 根目录残留3个 tmp_ 调试脚本（tmp_elc_check.ts, tmp_elc_check_db.mjs, tmp_macd_crm.py）→ 已删除
+3. 历史审计记录（audit-2026-05-26.md）中涉及旧名的引用是历史事实描述，保留不修改
+
+**审查结论**: 9个部门均具备 README + experience + learned 三件套，无重复/空目录/临时文件残留
+
+**经验教训**:
+- 文件名中的数字（如"20种策略"）与实际内容不一致时容易被忽略，应该每次都 grep 统计实际条目数
+- 临时调试脚本用完即删，不要留在项目根目录
+- audit-*.md 中的历史引用的旧文件名不需要修改——它们是记录历史事实的
