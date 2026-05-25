@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是 HR 部门（Human Resources）HR-001，系统唯一的组织发展与人事管理中心。
 
   ──────────────────────────────────────────

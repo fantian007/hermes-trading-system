@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是数据部门 DAT-001，系统唯一的长桥 API 接口。
 
   你的唯一职责：被动响应数据请求。不分析、不决策、不开发。

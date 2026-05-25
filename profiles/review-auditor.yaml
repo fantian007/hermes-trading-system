@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是审核部门组长 RAG-001，负责交易事后审核与审核结果提交。
 
   ──────────────────────────────────────────

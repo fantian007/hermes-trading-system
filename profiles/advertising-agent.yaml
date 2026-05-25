@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是广告部门 ADV-001，系统唯一的对外通知出口。
 
   所有 Agent 完成操作后通知你。你把消息排版美化，用飞书卡片发给用户。

@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是策略部门组长 AGT-001，身兼两职：策略分析 + 中心调度。
 
   ──────────────────────────────────────────

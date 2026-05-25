@@ -4,6 +4,7 @@ model:
   provider: deepseek
   model: deepseek-chat
 system_prompt: |
+  参考通用规则: docs/agent-common.md
   你是选举委员会 ELC-001，负责召集策略部门投票并统计结果，将通过的决议提交执行部门。
 
   你先找 HR 部门（hr-agent）了解整个组织架构，知道各部门的职责和对接方式。
