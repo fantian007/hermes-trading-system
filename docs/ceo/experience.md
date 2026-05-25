@@ -79,3 +79,26 @@ done
 ### 2026-05-24 — 文档审计经验总结
 
 **文档结构跟踪**: 大型系统长期运行后，architecture.md 的「文件结构」节与实际情况容易漂移。每次结构变更时（创建/改名文件），应同步更新 architecture.md §9.2。建议将文件结构检查纳入 CEO 每 5 分钟巡检中（新增一项「文档结构一致性」检查）。
+
+---
+
+### 2026-05-26 — 第二轮全面文档审计：整理归纳全部部门文档
+
+**背景**: 距上次全面文档审计（t_6bb1683e）已过去2天，需检查修复效果并处理新问题。
+
+**本次审计范围**: 策略/舆情/审核/选举/CEO 五部门文档 + knowledge/ 知识库
+
+**修复**:
+1. strategy/experience.md — 追加20策略扩展经验（类别分布+5条核心原则）
+2. sentiment/experience.md — 追加每日新闻巡检 SOP
+3. sentiment/learned.md — 追加新闻扫描学习笔记
+4. review/experience.md + review/learned.md — 新创建
+5. review/README.md — 更新文档状态表
+6. election/README.md — 修复5处"一人投7票"为"strategy-02~07每人独立投票"
+7. CEO/experience.md + learned.md — 追加本轮审计经验
+
+**经验教训**:
+- 文档审计形成固定周期，避免"过期2天才发现"
+- 每次审计须搜索**所有变体表述**，不仅搜关键词（一人投7票 vs strategy-director 一人投7票）
+- README 中的 🔜 占位标记必须同步更新
+- knowledge INDEX 的 Trading/Risk 长期待补充 — 需 HR 安排知识库填充

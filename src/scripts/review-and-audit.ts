@@ -74,8 +74,8 @@ async function main() {
 
   // 3. 加载该轮次的所有 Agent 投票
   const votes = db.prepare(
-    'SELECT * FROM agent_votes WHERE trade_id = ? OR round_id = ? ORDER BY voted_at'
-  ).all(tradeId, trade.approved_by) as any[];
+    'SELECT * FROM agent_votes WHERE trade_id = ? ORDER BY voted_at'
+  ).all(tradeId) as any[];
 
   // 4. 获取标的 K 线价格序列（用于技术指标审核）
   const klines = fetchKlines(trade.symbol, klineDays);

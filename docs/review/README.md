@@ -299,8 +299,8 @@ HR 部门 (hr-agent)
 | 文件 | 用途 | 状态 |
 |------|------|------|
 | `docs/review/README.md` | 本文档 — 部门概述与操作手册 | ✅ v1.0 |
-| `docs/review/experience.md` | 经验总结（待创建） | 🔜 |
-| `docs/review/learned.md` | 学习笔记（待创建） | 🔜 |
+| `docs/review/experience.md` | 经验总结 | ✅ v1.0（2026-05-26） |
+| `docs/review/learned.md` | 学习笔记 | ✅ v1.0（2026-05-26） |
 
 ---
 

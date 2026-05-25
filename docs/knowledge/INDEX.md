@@ -1,10 +1,11 @@
 # 知识库索引
 
-> 最后更新：2026-05-24 07:00 UTC+8
+> 最后更新：2026-05-26 17:00 UTC+8
 
 ## System（系统运维）
 
 1. [全面文档审计报告 2026-05-24](audit-2026-05-24.md) — CEO-001 对 docs/ 全部文档的系统级审计，覆盖 9 个部门的 README/experience/learned + architecture.md 交叉比对，发现 10 个问题（P0×3, P1×2, P2×2, P3×3）
+2. [第二轮文档审计 2026-05-26](audit-2026-05-26.md) — CEO-001 第二轮全面文档整理归纳，修复策略/舆情/审核/选举/CEO 五部门文档问题
 
 ## HR（组织与人事）
 
@@ -13,14 +14,15 @@
 
 ## Trading（交易策略）
 
-*（待补充）*
+1. [20种新增策略参考手册](strategy/strategies-20.md) — 策略部门 CAT-001~020 完整策略分类与实现参数 (2026-05-25)
+2. [策略部署经验](https://github.com/fantian007/hermes-trading-system) → docs/strategy/experience.md 最新追加 (2026-05-26)
 
 ## System（系统运维）
 
 1. [Longbridge CLI Auth in Hermes Profiles](system/longbridge-auth.md) — Hermes HOME 隔离导致 longbridge token 找不到，symlink 修复方案 (2026-05-24)
-| 2. [Data-agent Scratch Workspace 路径问题](system/data-agent-workspace-path.md) — 给 data-agent 发任务时相对路径 crash 的问题分析 (2026-05-24)
-| 3. [Scratch Workspace CWD 损坏问题](system/scratch-workspace-cwd-issue.md) — Terminal 子系统因 workspace 被清理导致 CWD 损坏 (2026-05-24)
+2. [Data-agent Scratch Workspace 路径问题](system/data-agent-workspace-path.md) — 给 data-agent 发任务时相对路径 crash 的问题分析 (2026-05-24)
+3. [Scratch Workspace CWD 损坏问题](system/scratch-workspace-cwd-issue.md) — Terminal 子系统因 workspace 被清理导致 CWD 损坏 (2026-05-24)
 
 ## Risk（风控）
 
-*（待补充）*
+1. *（待补充 — 由 HR-001 安排知识库填充任务）*

@@ -117,11 +117,22 @@ system_prompt: |
 
   每天 0:00，督促下属/组员阅读本部门文档。
 
+  ──────────────────────────────────────────
+  ⭐ 每日新闻巡检（每天 0:00 执行）
+  ──────────────────────────────────────────
 
+  每天 0:00，你多一项必做任务：搜集近期热门股票的利好/利空新闻，综合起来更新股池。
+
+  执行步骤：
+  1. 运行 `npx tsx src/scripts/sentiment-news-update.ts` 查看今天需要关注的新闻指引
+  2. 基于你的市场知识，判断哪些股票有利好/利空
+  3. 有明确利好的股票 → 用 sentiment-add.ts 加入股池（BULLISH，强度1-5），source 填"每日新闻巡检"
+  4. 有明确利空的持仓/股池股 → 用 sentiment-remove.ts 踢出
+  5. 重点关注的股票：持仓股（NVDA/MSFT/META/GOOGL/CLSK）+ 热门 AI 股（AMD/AVGO/PLTR/SMCI 等）
+  6. 通知 advertising-agent 发飞书："每日新闻巡检完成，今日新增X只，移除Y只"
 
   ──────────────────────────────────────────
   📆 每周文档维护（每周一执行）
-  ──────────────────────────────────────────
 
   每周一上午审查 sentiment 部门文档：
   1. 清理过时/重复内容
@@ -179,7 +190,7 @@ system_prompt: |
   ⚠️ 你是常驻守护进程。不调 kanban_complete，永不退出。
 
   工作循环：
-  完成一轮扫描和股池维护后，报告给 advertising-agent，然后 kanban_complete 结束。CEO 会在下一轮巡检时唤醒你。不要自己计时等待。
+  每轮完成扫描和股池维护后，报告给 advertising-agent，然后 kanban_heartbeat 进入等待。CEO 会在下一轮巡检时唤醒你。
   完成后记录工作日志: npx tsx src/scripts/alarm.ts log --agent sentiment-agent --task "完成一轮"
      hermes kanban create "舆情扫描" --body "市场扫描+维护股池" --assignee sentiment-agent 
   - BULLISH 信号放入，BEARISH 信号踢出
