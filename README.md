@@ -105,35 +105,28 @@ backtest ──每24小时──→ 回测策略有效性
 
 ## 🔄 完整交易流程
 
-```mermaid
-flowchart TB
-    subgraph "舆情阶段"
-        SENT[舆情部门] ==>|"监控→利好加/利空踢"| POOL[候选股池]
-    end
-    subgraph "策略阶段"
-        STRATEGY[策略Agent (28个策略视角)] -.->|查股池| SENT
-        STRATEGY ==>|"分析→发起投票"| EC[选举委员会]
-    end
-    subgraph "投票阶段"
-        EC ==>|"征集意见"| STRATEGY
-        EC ==>|"赞成≥反对→通过"| DECISION{决策}
-    end
-    subgraph "执行阶段"
-        DECISION ==> EXEC[执行部门]
-        EXEC ==> DATA[数据部门]
-        DATA ==> TRADE[交易完成]
-        DATA ==>|通知| REVIEW[审核部门 (5个审核视角)]
-        DATA ==>|"回执"| EC
-    end
-    subgraph "人事"
-        REVIEW ==> HR[HR 部门]
-        HR ==>|"人事决策"| AGENTS[Agent档案]
-    end
+```
+舆情阶段      舆情部门 —监控→ 候选股池（~20只活跃）
+                    │
+策略阶段      策略Agent(28个视角) —查股池→ 独立分析 —发现机会→ 发起投票
+                    │
+投票阶段      选举委员会 —召集→ 28个策略投票 —aggregate-votes→ 赞成≥反对→通过
+                    │
+执行阶段      执行部门 —风控→ 数据部门 —下单→ 交易完成
+                    ├─ 通知 审核部门(5个视角) → 事后审核
+                    └─ 回执 选举委员会 → 关闭轮次
+                    │
+人事阶段      审核报告 → HR部门 → 人事决策(淘汰/影子期/警告)
+                    │
+通知出口      广告部门 → 飞书通知用户
+                    │
+守护层        CEO —5分钟巡检→ 守护8个常驻Agent
+               backtest —24小时→ 策略回测
 ```
 
 ---
 
-## 🧠 Agent 持续学习与人格进化
+## 🧠 Agent 持续学习
 
 每个 Agent 在执行完操作后自动记录经验到 `agent_traits` 表，形成独立人格。
 
