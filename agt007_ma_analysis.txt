@@ -1,131 +1,119 @@
-// AGT-007 MA Crossover Strategy Analysis for CRM.US
-// Round: ELEC-20260525-1634
-import { DatabaseSync } from 'node:sqlite';
-import { execSync } from 'node:child_process';
+╔══════════════════════════════════════════════════════════╗
+║  AGT-007 均线交叉策略分析报告                            ║
+║  分析时间: 2026-05-25 17:29 UTC (周二开盘前)             ║
+╚══════════════════════════════════════════════════════════╝
 
-const DB_PATH = '/Users/zys/workspace/hermes-trading-system/data/trading.db';
-const SYMBOL = 'CRM.US';
-const ROUND_ID = 'ELEC-20260525-1634';
-const TRADE_ID = 'TMP-ELEC-20260525-1634';
-const VOTE_ID = 'VOTE-ELEC-20260525-1634-AGT-007';
-const AGENT_ID = 'AGT-007';
-const VOTE_NODE = 'BUY';
+┌──────────────────────────────────────────┐
+│ 1. CRM.US (强度3)                        │
+│    Salesforce — 企业AI Agentforce概念     │
+└──────────────────────────────────────────┘
 
-console.log('=== AGT-007 MA Crossover Strategy Analysis ===');
-console.log('Round:', ROUND_ID, 'Symbol:', SYMBOL);
+  持仓: OPEN $180.07 (盈亏: 0.0%)
+  股池: BULLISH 强度3 (状态: REMOVED — MACD信号过期)
 
-let price = 180.07;
-let ma5 = 179.08;
-let ma10 = 175.11;
-let ma20 = 178.80;
+  ┌──────┬─────────┬──────────┬──────────┐
+  │      │  MA5    │  MA10    │  MA20    │
+  ├──────┼─────────┼──────────┼──────────┤
+  │ 价位 │ $179.08 │ $175.11  │ $178.80  │
+  │ 趋势 │   ↑     │    ↑     │    →     │
+  └──────┴─────────┴──────────┴──────────┘
 
-// Try kline data via longbridge CLI
-try {
-  const result = execSync('which lb 2>/dev/null || which longbridge 2>/dev/null || echo ""', { encoding: 'utf-8' });
-  const lbPath = result.trim();
-  if (lbPath && lbPath.length > 0) {
-    console.log('Found longbridge CLI at:', lbPath);
-    const klines = execSync(lbPath + ' quote klines ' + SYMBOL + ' --tradefrom=1d --count=30 2>/dev/null', { encoding: 'utf-8', timeout: 15000 });
-    if (klines && klines.trim().length > 10) {
-      const lines = klines.trim().split('\n').filter(l => l.trim());
-      if (lines.length > 1) {
-        const closes = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i].split(/[\t,]/);
-          if (cols.length >= 4) {
-            const c = parseFloat(cols[3] || cols[2]);
-            if (!isNaN(c)) closes.push(c);
-          }
-        }
-        if (closes.length >= 20) {
-          price = closes[0];
-          ma5 = closes.slice(0,5).reduce((a,b)=>a+b,0)/5;
-          ma10 = closes.slice(0,10).reduce((a,b)=>a+b,0)/10;
-          ma20 = closes.slice(0,20).reduce((a,b)=>a+b,0)/20;
-          console.log('Computed from fresh kline data');
-        }
-      }
-    }
-  }
-} catch(e) {
-  console.log('Kline fetch unavailable, using context data');
-}
+  当前价 $180.07 > MA5 > MA20
 
-console.log('');
-console.log('Current Price:', price.toFixed(2));
-console.log('MA5:', ma5.toFixed(2));
-console.log('MA10:', ma10.toFixed(2));
-console.log('MA20:', ma20.toFixed(2));
+  均线排列分析:
+  ✓ MA5($179.08) > MA10($175.11) — 短期看多
+  ✗ MA10($175.11) < MA20($178.80) — 中期仍有压力
+  ✓ 价格 > MA20 — 站稳中期均线上方
+  ✓ 金叉信号: MA5上穿MA20，价差+0.16%
 
-const ma5gt10 = ma5 > ma10;
-const ma10gt20 = ma10 > ma20;
-const ma5gt20 = ma5 > ma20;
-const priceGtMa5 = price > ma5;
-const priceGtMa20 = price > ma20;
+  结论: 金叉信号初现，但MA10仍低于MA20，未形成完全多头排列。
+        前次选举(ELEC-20260524-1210)已4:1通过BUY但未执行(死单)。
+        当前处于持仓成本价。
 
-console.log('');
-console.log('MA5>MA10:', ma5gt10, '| MA10>MA20:', ma10gt20, '| MA5>MA20:', ma5gt20);
-console.log('Price>MA5:', priceGtMa5, '| Price>MA20:', priceGtMa20);
+  信号: BUY (置信度 0.55)
+  建议: HOLD现仓，观察MA10是否能上穿MA20完成完全多头排列。
+        止损位: MA20 $178.80 (跌破则减仓)
 
-let signal, confidence, reasoning;
 
-if (ma5gt10 && ma10gt20 && ma5gt20) {
-  const spread = ((ma5 - ma10) / ma10) * 100;
-  if (priceGtMa5 && priceGtMa20) {
-    signal = 'BUY';
-    if (spread < 3.0) {
-      confidence = 0.75;
-      reasoning = 'MA crossover: MA5>$' + ma5.toFixed(2) + '>MA10>$' + ma10.toFixed(2) + '>MA20>$' + ma20.toFixed(2) + ' full bull alignment. Price $' + price.toFixed(2) + ' above all MAs. Fresh golden cross (spread=' + spread.toFixed(2) + '%). Strong BUY.';
-    } else {
-      confidence = 0.65;
-      reasoning = 'MA crossover: MA5>MA10>MA20 bull alignment established. Price above all MAs. BUY.';
-    }
-  } else {
-    signal = 'HOLD';
-    confidence = 0.50;
-    reasoning = 'MA crossover: Bull alignment but price $' + price.toFixed(2) + ' below MA5($' + ma5.toFixed(2) + '). Pullback. HOLD.';
-  }
-} else if (!ma5gt10 && !ma10gt20 && !ma5gt20) {
-  signal = 'SELL';
-  confidence = 0.60;
-  reasoning = 'MA crossover: Death cross alignment. MA5<$' + ma5.toFixed(2) + '<MA10<$' + ma10.toFixed(2) + '<MA20<$' + ma20.toFixed(2) + '. SELL.';
-} else {
-  signal = 'HOLD';
-  confidence = 0.40;
-  reasoning = 'MA crossover: Mixed signals. MA5=$' + ma5.toFixed(2) + ' MA10=$' + ma10.toFixed(2) + ' MA20=$' + ma20.toFixed(2) + '. No clear direction. HOLD.';
-}
+┌──────────────────────────────────────────┐
+│ 2. CLSK.US (强度3)                       │
+│    CleanSpark — AI数据中心+比特币矿商    │
+└──────────────────────────────────────────┘
 
-console.log('');
-console.log('=== ANALYSIS RESULT ===');
-console.log('Signal:', signal);
-console.log('Confidence:', confidence.toFixed(2));
-console.log('Reasoning:', reasoning);
+  持仓: OPEN $15.40 (盈亏: +3.7%)
+  股池: BULLISH 强度3 (状态: ACTIVE)
 
-// DB Operations
-console.log('');
-console.log('=== DB OPERATIONS ===');
-const db = new DatabaseSync(DB_PATH);
+  ┌──────┬─────────┬──────────┬──────────┐
+  │      │  MA5    │  MA10    │  MA20    │
+  ├──────┼─────────┼──────────┼──────────┤
+  │ 价位 │ $15.05  │ $14.34   │ $13.62   │
+  │ 趋势 │   ↑     │    ↑     │    ↑     │
+  └──────┴─────────┴──────────┴──────────┘
 
-const cols = db.prepare("PRAGMA table_info(agent_votes)").all();
-const colNames = cols.map(c => c.name);
-console.log('agent_votes columns:', colNames.join(', '));
+  当前价 $15.97 > MA5 > MA10 > MA20
 
-const existing = db.prepare('SELECT vote_id FROM agent_votes WHERE vote_id = ?').get(VOTE_ID);
-if (existing) {
-  console.log('Updating existing vote:', VOTE_ID);
-  db.prepare('UPDATE agent_votes SET vote_direction=?, confidence=?, reasoning=?, raw_analysis=?, voted_at=datetime(\'now\') WHERE vote_id=?')
-    .run(signal, confidence, reasoning, reasoning, VOTE_ID);
-} else {
-  console.log('Inserting new vote:', VOTE_ID);
-  db.prepare('INSERT INTO agent_votes (vote_id, trade_id, agent_id, vote_node, vote_direction, confidence, reasoning, raw_analysis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(VOTE_ID, TRADE_ID, AGENT_ID, VOTE_NODE, signal, confidence, reasoning, reasoning);
-}
+  均线排列分析:
+  ✓ 完全多头排列: MA5 > MA10 > MA20 ✅
+  ✓ 价格在所有均线上方
+  ✓ 金叉形态确认，趋势健康
+  ✓ 持仓盈利+3.7%
 
-const verify = db.prepare('SELECT * FROM agent_votes WHERE vote_id = ?').get(VOTE_ID);
-console.log('');
-console.log('=== VOTE VERIFIED ===');
-console.log(JSON.stringify(verify, null, 2));
+  结论: 标准的多头排列形态，上升趋势完好。
+        是本次分析中技术面最强的标的。
 
-db.close();
-console.log('');
-console.log('=== AGT-007 Analysis Complete ===');
+  信号: BUY (置信度 0.75)
+  建议: HOLD现仓，可在回调至MA10($14.34)附近加仓。
+        移动止损: MA10 $14.34 (收盘跌破则减仓)
+
+
+┌──────────────────────────────────────────┐
+│ 3. SNAP.US (强度2)                       │
+│    Snap — 社交广告+AI滤镜功能             │
+└──────────────────────────────────────────┘
+
+  持仓: 无
+  股池: 已移除 (REMOVED as of 2026-05-25)
+
+  ┌──────┬─────────┬──────────┬──────────┐
+  │      │  MA5    │  MA10    │  MA20    │
+  ├──────┼─────────┼──────────┼──────────┤
+  │ 价位 │ $5.65   │ $5.61    │ $5.84    │
+  │ 趋势 │   →     │    ↑     │    ↓     │
+  └──────┴─────────┴──────────┴──────────┘
+
+  当前价 $5.72 < MA20
+  MA5 > MA10 (短期反弹) 但价格在MA20下
+
+  均线排列分析:
+  ✗ 价格 < MA20 — 中期走势偏空
+  ✓ MA5上穿MA10 — 短期反弹信号
+  ✗ 死叉信号: MA5($5.65) < MA20($5.84)
+
+  结论: 技术面偏空，且已从活跃股池移除。
+        短期虽有反弹但不足以改变中期趋势。
+
+  信号: SELL (置信度 0.55)
+  建议: 不操作。股池已移除，无持仓，无需关注。
+
+
+══════════════════════════════════════════════════════════
+  综合排名 (按技术面强度)
+══════════════════════════════════════════════════════════
+
+  1st: CLSK.US — BUY (0.75) ★★★ 完全多头排列
+  2nd: CRM.US — BUY (0.55) ★★  金叉初现，待确认
+  3rd: SNAP.US — SELL (0.55) ★  技术偏空，已移除
+
+  整体评估:
+  - 当前股池20只全部BULLISH，AI/AI基础设施主线明确
+  - CLSK作为AI数据中心概念，技术面最强
+  - CRM需关注周二开盘能否站稳MA20并形成完全多头
+  - SNAP已出池，无需进一步关注
+
+══════════════════════════════════════════════════════════
+  备查: 上轮AGT-007投票记录(ELEC-20260525-1659)
+══════════════════════════════════════════════════════════
+  CLSK: HOLD (conf=0.55) — MA5略高于MA20，温和看多
+  CRM:  持有多头 (已持仓)
+  MSFT: HOLD (conf=0.70) — MA5/MA20收敛，方向不明
+  NVDA: SELL (conf=0.50) — 死叉，-8.95%亏损

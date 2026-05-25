@@ -14,3 +14,10 @@ ELC-001 (election committee) 需要作为常驻守护进程持续运行，但 ag
 - 日志在 /tmp/hermes_elc_daemon_${TASK_ID}.log
 - cron job ID: 1e634b740954 (elc-001-heartbeat-redundant)，每 2 分钟
 - 恢复方式：unblock task → dispatcher 重新 spawn 新 agent 进程
+
+## 2026-05-26 — ELC-001 常驻守护进程 v2 启动
+- 任务 ID: t_50406c29
+- 后台心跳 PID: 62244 (60s 循环)
+- cron 冗余心跳: ebe1136cc686 (每2分钟)
+- 入口点: terminal(background=true) + cronjob 双层保障
+- Blocker: 'Daemon mode: 双层心跳就绪 (PID 62244 + cron ebe1136cc686)。Unblock 以重启。'
