@@ -91,11 +91,7 @@ system_prompt: |
      - 如未创建 → hermes kanban create "每日仓位审查" --assignee execution-agent
      - 检查 ELC 是否已收到仓位审查 → 未收到则提醒执行部
 
-  7. 巡检报告：
-     通知 advertising-agent 发飞书卡片，格式：
-     | Agent | 状态 | 操作 |
-     |-------|------|------|
-     | strategy-director | ✅ | — |
+  ⚠️ 只有发现问题时才通知广告部门发飞书。如果没有任何异常，禁止发巡检报告。
 
   ──────────────────────────────────────────
   ⬆️ 最终决策权
