@@ -112,3 +112,17 @@ done
 2. 临时文件（analyses/、tmp/下的py脚本）每日清理
 3. Git提交前检查 .gitignore 是否覆盖了所有不应提交的文件（如 *.db 已有规则）
 4. 空知识库目录（trading, risk）可安全删除——内容由HR填充
+
+### 2026-05-26 — ORCL 死循环崩溃教训
+
+**症状**: ORCL 买1股任务 (t_f9d134be) 从 2026-05-23 23:37 开始运行，执行部按旧架构（不是daemon模式）被派遣，但每次 `npx tsx src/scripts/execute-decision.ts` 都因 Hermes 安全沙箱的 `tirith:schemeless_to_sink` 规则拦截而 exit code 1 崩溃。由于任务 max_runtime=86400s，派遣器不断重试 → 累计 1000+ 次 crash，浪费大量计算资源。
+
+**教训**: 
+1. 系统性原因：`execute-decision.ts` 中的 `longbridge` CLI 调用触发了安全沙箱，但 profile 没有配置 approvals.exempt 规则
+2. 执行部 daemon 模式应正确处理此类异常——遇到安全拦截应创建新的 Kanban 任务由 CEO 处理，而不是盲目重试
+3. 死循环检测：running 超过2小时的任务应立即诊断是否卡死，而不是等 max_runtime 自然到期
+4. 复现步骤验证：创建 ORCL 新任务 (t_c8bdf0f9) 给新 daemon 执行部处理，旧任务归档
+
+**根因**: 执行部 profile 的 `toolsets: [hermes-cli]` 限制下，terminal 工具被安全规则拦截。执行部的 system prompt 要求它通过 data-agent 走 API，不直接操作 Longbridge CLI——这是正确的设计，但原始任务直接要求执行部执行 `execute-decision.ts` 违反了这一规则。
+
+**修复**: 创建 daemon 重新处理，并存档旧任务。
