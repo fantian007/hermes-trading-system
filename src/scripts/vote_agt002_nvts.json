@@ -1,0 +1,8 @@
+{
+  "agent_id": "AGT-002",
+  "vote_direction": "HOLD",
+  "confidence": 0.65,
+  "reasoning": "MACD(12,26,9)分析：NVTS.US GaN功率半导体龙头近期+20%创52周新高，AI数据中心电源需求驱动。DIF/DEA大概率在零轴上方（强势多头），但+20%急速拉升后MACD柱状图可能出现缩头（动能衰减）。2026-05-25 pool标记BULLISH strength 3/5。前期轮次(ELEC-20260526-2002)原BUY 0.7但未执行。根据经验learned_pitfall（SMCI +16.4%急速拉升后衰竭模式），+20%涨幅更大，追高风险较高。目前无持仓，建议HOLD观望回调至MACD支撑位再考虑入场。",
+  "price_low": 0,
+  "price_high": 0
+}

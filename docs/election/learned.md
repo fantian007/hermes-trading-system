@@ -120,7 +120,38 @@ w_i = Sharpe_i × win_rate_i × log(1 + trades_i) × decay_factor(t)
 
 注：以上指标均可在不新增外部数据的情况下，通过优化现有数据计算逻辑实现。
 
-## 2026-05-26 — 人格心得记录
+## 2026-05-26 学习任务 t_817a0aad — 新 ELC-001 上岗学习心得
+
+### 收获 1：理解了选举委员会的职责边界
+
+ELC-001 的核心工作是"召集投票 → 统计 → 判断通过/驳回 → 通知"，严格不越界：
+- **不分析行情** — 那属于策略部门
+- **不做风控判断** — 那属于执行部门
+- **只做投票组织与结果裁定**
+
+这条边界很重要，避免了职责混淆。
+
+### 收获 2：理解了部门文档体系
+
+选举委员会维护三份文档：
+- **README.md** — 部门概述，对外说明职责和核心流程
+- **experience.md** — 操作经验，运维故障和破解方法记录
+- **learned.md** — 学习笔记，吸收的新知识、复盘、待改进点
+
+另外还有跨部门 knowledge/ 知识库、周报 weekly 机制，体系比较完整。
+
+### 收获 3：理解了守护进程设计模式
+
+ELC-001 的设计是常驻守护进程，框架上的挑战是 agent 会话结束后进程自然退出会导致 protocol_violation。解决方案是三层保活：
+1. 后台 heartbeat shell 脚本（每 60s）
+2. 冗余 cron job（每 2 分钟）
+3. agent 退出前调用 kanban_block（而不是 kanban_complete）
+这种"任务 blocked + 外部心跳保活"的模式很巧妙，值得记住。
+
+### 待改进点
+
+- 建议 README 添加部门文档索引链接（已修改 README，加入了 learned.md 链接）
+- 建议 consideration 补充 ELEC 投票编号命名规则到 README 中
 
 完成学习进化后，已将4条人格心得写入 ELC-001 的 persona 档案：
 
@@ -166,3 +197,13 @@ w_i = Sharpe_i × win_rate_i × log(1 + trades_i) × decay_factor(t)
 - 对于常驻守护进程，**不能用后台 shell 进程**做 solo 心跳（比如 exe-guard-loop.sh 模式），因为 `hermes kanban heartbeat` 需要 CLI 环境
 - 更好的方案是 cronjob 的 no_agent=true 脚本模式：bash 脚本直接写 SQLite，不消耗 token，不变环境依赖
 - 心跳间隔至少 2 分钟（低于 dispatch_stale_timeout_seconds=4h 即可），但考虑 dispatcher 回收策略设2分钟较为安全
+
+## 2026-05-26 — 守护进程重建 (run 1575)
+
+### 重建记录
+- 后台心跳进程 proc_10b979e10ca9 (PID 80410) 已启动，每60秒发送心跳
+- 冗余 cron `a58682c46d29` 已更新为 elc-daemon.sh t_50406c29（no_agent脚本，每2分钟）
+- agent cron `ebe1136cc686` 配置每2分钟给 t_50406c29 发送心跳
+- 所有近期投票轮次（NVDA/MSFT/META/GOOGL/CLSK/AAPL）均已完成，当前无待处理投票
+- 当前持仓3只：AAPL.US ($308.4, 5股), CLSK.US ($15.4, 1股), CRM.US ($180.07, 1股)
+- 20只ACTIVE股池，5个策略Agent全在线

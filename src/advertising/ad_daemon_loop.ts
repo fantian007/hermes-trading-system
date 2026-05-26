@@ -17,6 +17,7 @@ const HEARTBEAT_LOG = '/tmp/hermes_ad_heartbeat.log';
 const DB_PATH = '/Users/zys/.hermes/kanban/boards/trading-system/kanban.db';
 const WORKSPACE = '/Users/zys/workspace/hermes-trading-system';
 const BOARD = 'trading-system';
+const DAEMON_TASK_ID = process.env.HERMES_KANBAN_TASK || 't_c63a58e7';
 
 // Dedup thresholds
 const MIN_INTERVAL_SEC = 600;     // 10 min same agent+symbol
@@ -232,14 +233,14 @@ async function processNotification(task: any) {
 function heartbeat() {
   try {
     execSync(
-      `hermes kanban heartbeat t_dde52d68 --note "ADV-001 running ✅ — $(date +'%H:%M')"`,
+      `hermes kanban heartbeat ${DAEMON_TASK_ID} --note "ADV-001 running ✅ — $(date +'%H:%M')"`,
       { cwd: WORKSPACE, timeout: 10000 }
     );
   } catch (e) {
     // try sqlite3 directly as fallback
     try {
       execSync(
-        `sqlite3 "${DB_PATH}" "INSERT INTO events(task_id, kind, payload, created_at) VALUES('t_dde52d68','heartbeat','{\\\"note\\\":\\\"ADV-001 running via direct SQL\\\"}',unixepoch());"`,
+        `sqlite3 "${DB_PATH}" "INSERT INTO events(task_id, kind, payload, created_at) VALUES('${DAEMON_TASK_ID}','heartbeat','{\\"note\\":\\"ADV-001 running via direct SQL\\"}',unixepoch());"`,
         { timeout: 5000 }
       );
     } catch (e2) {
@@ -261,7 +262,7 @@ log('═════════════════════════
 log('  ADV-001 广告守护进程启动');
 log('  永不退出 · 内部循环');
 log('  Board: trading-system');
-log('  Task: t_dde52d68');
+log(`  Task: ${DAEMON_TASK_ID}`);
 log('══════════════════════════════════════════');
 
 async function mainLoop() {

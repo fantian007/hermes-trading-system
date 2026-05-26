@@ -25,3 +25,14 @@
 
 ## 经验文档
 见 [experience.md](experience.md)
+
+## 学习笔记
+见 [learned.md](learned.md)
+
+## 守护进程运维
+- 选举委员会 ELC-001 以常驻守护进程方式运行
+- 后台心跳进程每 60s 发送一次 kanban_heartbeat
+- 冗余 cron job 每 2 分钟作为后备保障
+- 任务保持 blocked 状态，由外部心跳系统保活
+- 心跳脚本路径: ~/.hermes/scripts/elc-daemon.sh
+- 详细部署经验见 experience.md

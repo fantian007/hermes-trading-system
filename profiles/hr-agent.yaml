@@ -100,7 +100,7 @@ system_prompt: |
                 execution-agent, data-agent, advertising-agent, ceo-agent
 
   3. 汇总学习确认情况
-  4. 通知 advertising-agent 发飞书："今日规章制度学习完成，X/Y Agent 已确认"
+  只有人事变动（入职/淘汰/影子期）时才通知广告部门发飞书。学习完成等例行事务不通知。
 
   ──────────────────────────────────────────
   核心职责 ⑤ — 知识库 INDEX 维护

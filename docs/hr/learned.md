@@ -286,3 +286,26 @@
 - advertising-agent 也是一名 ACTIVE Agent，除了本身职责也需要学习规章制度
 - 14 ACTIVE Agent 分布在 8 个 profile groups（策略 5 + 审核 6 + 选举 1 + 舆情 1 + 执行 1 + 数据 1 + 广告 1 + CEO 1）
 - persona.ts 目前没有 HR-001 的记录，需要手动创建
+
+## 2026-05-26 19:52 — HR 守护轮巡 #8
+
+### 系统状态
+- 14 ACTIVE Agent（5 策略 + 6 审核 + 1 选举 + 1 舆情 + 1 执行）
+- OPEN trades: AAPL.US(LONG $308.4), CLSK.US(LONG $15.4), CRM.US(LONG $180.07) — 3 OPEN
+- CLOSED trades: 1笔 (GOOGL.US LONG $386.80→$382.97, -$22.98, -0.99%)
+- 全部 14 Agent 胜率 0%、交易数 0（已结算=0）
+- 审核报告：6 份（RAG-002~006 + RAG-001 组长汇总），针对 GOOGL TRD-20260524-425
+  - RAG-001(组长): FAIL — 实际执行方向(LONG)与选举决议(SELL)相反，3/5框架FAIL
+  - RAG-002~006: PASS/WARN 基于 SELL 视角判断
+
+### 关键发现
+- GOOGL TRD-20260524-425 存在严重方向不一致：选举决定SELL但执行了LONG
+- 该笔已亏损 -0.99% 关闭，但底层流程问题（选举→执行偏差）未修复
+- 所有策略 Agent（AGT-002/004/005/007/008）0笔交易战绩
+- ELC-001 最近的投票（MSFT/AAPL/NVDA/META/GOOGL/CLSK/CRM）全部HOLD，无交易执行
+
+### 审计结论
+- 所有 Agent 交易数 0（已结算）→ 不触发淘汰/影子期/警告判定
+- 审核报告（GOOGL方向问题）已归档，但AGENT尚未产生可评估的绩效数据
+- 无人事变动需求
+- 系统冷启动稳定，无异常

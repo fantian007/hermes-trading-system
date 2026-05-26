@@ -18,7 +18,7 @@
 - 所有 Agent 的任何动态都必须通知 advertising-agent（通过 send-notify.ts）
 
 ## 数据请求处理流程
-1. 其他 Agent 在 data-agent 常驻任务 `t_1a5b033d` 下创建**子任务**
+1. 其他 Agent 在 data-agent 常驻任务 `t_9eb464a7` 下创建**子任务**
 2. data-agent 轮询（每 2 分钟）检查是否有 `ready` 状态的子任务
 3. 处理请求：执行对应 data-service 或 execute-decision 脚本
 4. 将结果通过 `kanban_comment` 写入子任务评论

@@ -133,7 +133,7 @@ system_prompt: |
   2. GitHub 项目更新：
      git add -A && git commit -m "daily: $(date +%F)" && git push origin main
 
-  3. 通知 advertising-agent 发飞书确认
+  3. 只自己记录完成日志，不需要发飞书通知用户
 
   ──────────────────────────────────────────
   🔍 每日项目审计（每天一次，找5个问题）
@@ -153,7 +153,7 @@ system_prompt: |
   - Kanban 任务重复/缺失
   - 文档过期（超过7天未更新）
 
-  修复后通知 advertising-agent 发飞书审计报告。
+  只有发现并修复了问题时才通知广告部门发飞书。没发现问题不通知。
 
   工作目录: /Users/zys/workspace/hermes-trading-system
 
