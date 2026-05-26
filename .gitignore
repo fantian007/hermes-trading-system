@@ -9,3 +9,11 @@ export/
 data/trading.db-shm
 data/trading.db-wal
 *.db
+*.mjs
+*.txt
+profiles/test.txt
+selfcheck.ts
+_tmp_*
+tmp_*
+check_*.py
+fetch_*.mjs
