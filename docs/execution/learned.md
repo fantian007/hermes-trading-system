@@ -17,3 +17,15 @@
 - 执行部门是整个系统中唯一可以"不等ELC投票就行动"的场景是 P0紧急清仓令（舆情部门直接触发），其他所有交易行为必须经过ELC。
 - 经验文档 experience.md 记录了从第1轮到第6轮的完整巡检链，是排查历史问题的第一手资料，每次巡检前应回顾 past rounds 避免重复踩坑。
 - 部门文档（README/experience/learned）三者分工清晰：README=静态规则+对接方式，experience=动态操作经验，learned=个人成长笔记。
+
+## 2026-05-26 (第12轮巡检后)
+- 协议违规问题：调度器检测到 worker 退出时没调 kanban_complete/kanban_block 就标记为 crashed。本轮起确保循环不退出——不自调 kanban_complete，只在巡检中继续循环。
+- election_rounds 无 status 列，判断死单方法：final_decision IN ('BUY','SELL') AND resulted_trade_id IS NULL。不可用 WHERE status='PASSED'，因为无此列。
+- trades 表存储实际交易，无 PENDING 状态。订单状态在长桥 API 侧查询。
+- 美东时间 08:32 = CST 20:32，距离开盘约 58 分钟。开盘前 CLSK/AAPL 加仓 MO 单标记为 NotReported 是正常行为。
+
+## 2026-05-26 (第14轮巡检 — 当前轮次)
+- DB_PATH 在 config.ts 中定义为 `./data/trading.db`（相对于项目根目录），不是 src/trading.db。
+- election_rounds 表没有 action/status 列。final_decision 列代表最终决策（BUY/SELL/HOLD），resulted_trade_id 标记是否已执行。
+- 死单检查的正确 SQL：`SELECT round_id, symbol, final_decision, resulted_trade_id FROM election_rounds WHERE final_decision IN ('BUY','SELL') AND resulted_trade_id IS NULL`
+- GOOGL 做空的 sell_price=382.97 已被记录到 DB，但该笔 trade 仍为 OPEN 状态——因为做空是卖出再买回，所以 sell_price 记录卖空价格，买回平仓才算 CLOSED。

@@ -57,7 +57,21 @@
 
 **多标的并行数据请求：** 如果未来有多个标的同时需要数据，可使用 `Promise.all` 无依赖异步批处理，避免串行等待。
 
-## 2026-05-26 — 第6次运行：持久化 daemon 脚本成功 + 正确处理子任务
+## 2026-05-26 — 第7次运行：任务迁移到 t_3f431e4d + daemon-watcher 常驻模式
+
+**问题：** 常驻任务 ID 从 `t_9eb464a7` 迁移到 `t_3f431e4d`。前3次尝试全部因为本尊进程退出导致 protocol violation。
+
+**解决方案：**
+1. 本尊进程（当前 worker）保持在线 — 不调用 kanban_complete，永不退出
+2. 启动 daemon-watcher 后台进程，每60秒发心跳（使用 kanban CLI）+ 轮询 ready 子任务
+3. 本尊进程定期轮询 daemon-watcher 状态 + 检查是否有新任务需要处理
+4. 旧 daemon-v2.py (PID 10671) 仍在运行，发心跳到旧任务 — 不冲突，可保留
+
+**核心教训：**
+- 本尊进程必须保持存活，否则 dispatcher 判定 protocol violation
+- tool-based kanban_heartbeat 和 CLI-based heartbeat 都是有效的 — 但本尊进程用 tool，daemon 用 CLI
+- 旧任务完成时，如果是前一个 session 的数据请求，需通过 CLI `hermes kanban complete` 关闭，因为当前 worker scope 被绑定到常驻任务上
+- README.md 中的任务 ID 需要同步更新
 
 **问题：** 前5次运行全部因 "worker exits without complete/block" 而 crash。
 

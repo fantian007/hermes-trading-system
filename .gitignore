@@ -17,3 +17,9 @@ _tmp_*
 tmp_*
 check_*.py
 fetch_*.mjs
+__pycache__/
+*.pyc
+_*.py
+test_*.py
+*.bak
+*.tmp

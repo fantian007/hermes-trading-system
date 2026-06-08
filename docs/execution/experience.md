@@ -233,5 +233,97 @@ ELC确认两笔BUY加仓决策：
 |- 本轮不出错方法：跟踪每笔订单的order_id，开盘后核对成交价是否与DB记录一致
 |- 市价单(MO)在非交易时段提交后标注RTHOnly，开盘后自动成交；下一轮巡检时buy_price会自动更新为实际成交价，无需人工补录
 |- 做空（先卖后买）在DB中记录为direction=LONG + sell_price≠null，理解其含义：buy_price=做空卖出价, sell_price=平仓买回价
-|- 巡检时使用sqlite3直接查数据/trading.db比tsx脚本更稳定（避免tsx inline eval路径bug）|
+||- 巡检时使用sqlite3直接查数据/trading.db比tsx脚本更稳定（避免tsx inline eval路径bug）
 |
+|## 2026-05-26 20:32 CST — EXE-001 第10轮巡检
+|
+|### 场景
+|常驻守护进程重建后第5轮巡检（run 3705），系统正常待命。
+|
+|### 状态
+|- ✅ 6笔OPEN持仓全部正常：AAPL×2 + CLSK×2 + CRM + GOOGL做空
+|- ✅ CLSK/AAPL增仓价格已确认：buy_price=$16.55/$310.62
+|- ✅ 无新的BUY/SELL待执行决策
+|- ✅ 无PENDING订单
+|- 时间：2026-05-26 20:32 CST (美东 8:32 ET，距离开盘~58分钟)
+|
+|### 经验
+|- election_rounds表没有status列，用final_decision代替。BUY/SELL决策由 resulted_trade_id 是否为空判断是否已执行
+|- trades表有status列：OPEN/CLOSED/CANCELLED。没有PENDING状态
+|- GOOGL做空在DB中用 direction=LONG + sell_price≠null 表示（先卖后买模式），buy_price=做空卖出价, sell_price=待平仓价
+||- daily_ledger表 trade_count 为0（今日交易未在此表追踪），通过trades表检查今日交易次数|
+
+## 2026-05-26 20:29 CST — EXE-001: NVTS.US BUY 二次风控HOLD（本轮）
+
+### 场景
+ELC-001 通过 NVTS.US BUY (ELEC-20260526-2002, 5BUY/2HOLD)。之前已一次风控HOLD（盘前$31.70），7分钟后ELC确认（parent task t_dff85b74 done），但重新创建了执行子任务 t_1386d463。
+
+### 二次风控过程
+1. 查询DB：election_rounds 无status列，用 final_decision IN ('BUY','SELL') AND resulted_trade_id IS NULL 判断
+2. 查询 google finance 获取 NVTS 实时盘前数据
+3. 同时发现 CRM.US 死单（ELEC-20260524-1210），创建重投任务给ELC
+
+### NVTS 盘前数据（08:30 ET）
+- 前收盘: $24.38 → 昨日收盘 $29.25 (+19.98%) → 盘前 $31.59 (+8.00%)
+- 日内振幅 $24.41~$29.50（+20.9%）
+- 成交量 138万（平均3790万）
+- Beta 3.62
+
+### 风控结论：HOLD（继续暂缓）
+| 检查项 | 结果 |
+|--------|------|
+| 仓位占比（5股=$158） | ✅ 0.18%（远低于20%） |
+| 日交易次数 | ✅ 3次（低于10次上限） |
+| 可用资金 ~$39K | ✅ 充裕 |
+| 单笔最大亏损 $31.59→$27.79 = -12% | ⚠️ 超出5%标准 |
+| 入场价比策略建议 $29.25 高 8% | ⚠️ 性价比低 |
+| 分析师共识目标价 $13-21 | ⚠️ 远低于当前$31.59 |
+| 高管减持（CFO/CEO套现） | ⚠️ 内部人信心差 |
+
+**计划：** 等ET 09:30（21:30 CST）开盘后重新评估。回落到$28-30执行，否则放弃。
+
+### 发现的死单
+- CRM.US BUY (ELEC-20260524-1210) — 2天前通过未执行，已创建重投任务 t_1be29480 给ELC
+
+### 关键经验
+- 盘前跳空大涨8%+的个股，即使ELC通过了BUY，风控也要坚守价格合理性底线
+- 分析师共识目标价和估值是重要参考——当前股价远超分析师目标，说明市场存在纯概念炒作
+- 高管减持信号（内部人卖出）应作为负面参考因素
+- 用 google finance（浏览器工具）获取行情比等待 data-agent 更快，但需注意盘前数据可能随时变化
+
+## 2026-05-26 20:32 CST — EXE-001 第12轮巡检（本轮）
+
+### 场景
+第12轮常驻巡检，系统正常待命。美东 08:32 ET（距离开盘~58分钟）。
+
+### 已检查项
+1. ✅ DB 持仓：6笔 OPEN trades 正常（AAPL×2 308.4/310.62 + CLSK×2 15.4/16.55 + CRM 180.07 + GOOGL做空 12@382.97）
+2. ✅ 死单：NVDA.SELL(CANCELLED_NO_POSITION) + NVTS(ELC确认HOLD) + CRM(已吸收) — 均无需处理
+3. ✅ 最新 ELC 投票（最近15条）：全部为 HOLD，无新 BUY/SELL 待执行
+4. ✅ PENDING 订单：无
+5. ✅ 今日交易：3次（低于10次上限）
+6. ✅ adverstising 通知：旧任务 t_e61fc62f（第10轮数据）已comment标注过期，新任务 t_416c7966 已创建
+
+### 关键经验
+- 发送通知到 advertising-agent 时始终创建新任务（最新数据），旧任务可 comment 标注过期而非直接 komplete
+- 在协议违规常发环境下，可每次循环先发 kanban_heartbeat 告知调度器还活着
+- trades 表的 OPEN 状态可能包含多笔同一股票的多次加仓——全部是 efctive 仓位
+
+## 2026-05-26 — NVTS.US BUY 风控HOLD后ELC重投票确认 (第2轮)
+
+### 问题
+ELC-2002 投票5BUY/2HOLD通过 → 风控HOLD → ELC确认HOLD（t_dff85b74 done）→
+ELC又发起ELEC-2004重投票（1BUY/4HOLD）再次确认HOLD。
+
+当我再次被dispatch时，原任务t_1386d463的context仍是旧的BUY决策。
+
+### 解决方案
+1. 执行前先查DB最新round（>SELECT * FROM election_rounds WHERE symbol='NVTS.US' ORDER BY created_at DESC）
+2. 比较原round与最新round的final_decision
+3. 如已被后续round覆盖 → 自然关闭任务，无需执行
+4. 通知广告部门
+
+### 关键经验
+- 永远不要只看任务body里的决策——必须先查DB最新round状态
+- ELC可能在风控HOLD后发起重投票来正式确认
+- resulted_trade_id IS NULL 不一定代表死单——需检查是否有更晚的round覆盖

@@ -1,23 +1,15 @@
-# 广告部门经验总结
+# 广告部门经验文档
 
-## 2026-05-26 — ADV-001 常驻任务 protocol violation 问题
+## 2026-05-26 — send-card.ts 飞书卡片JSON结构修复
 
-**问题**: 常驻守护任务每次被 Hermes dispatcher 标记为 protocol violation（rc=0 但不调用 kanban_complete/kanban_block）。
+**问题**: send-card.ts 传递给 sendCard() 时包含了外层的 `{msg_type, card}` 包装，但 Feishu API 的 `content` 字段需要的是纯卡片正文 JSON (`{config, header, elements}`)，不带外层包装。
 
-**尝试过的方案**:
-1. 直接运行并退出 (rc=0) → 被标为 protocol violation
-2. 仅发送 heartbeat 后退出 → 同样被标为 protocol violation
+**症状**: 控制台输出 `"status":"failed"`，错误码 `[230099] Failed to create card content, ext=ErrCode: 200621; ErrMsg: parse card json err`
 
-**可行方案**: 调用 `kanban_block(reason="常驻守护运行中...")` 代替 `kanban_complete`。这样 dispatcher 知道任务被有意阻塞而非异常退出。守护进程本身 (ad_daemon_loop.ts) 独立在后台运行，不受 kanban 任务状态影响。
+**可行方案**:
+1. send-card.ts 收到 stdin 的 JSON 后，如果包含 `msg_type + card` 包装结构，提取 `wrapper.card` 作为卡片正文传递给 sendCard()
+2. 修改后代码: `const cardBody = wrapper.card ?? wrapper;`
+3. 直接调用 Feishu API 时，确保 `content` 字段只包含 `{config, header, elements}` 的 JSON 字符串
+4. `msg_type: 'interactive'` 在请求 body 顶层指定，不在 content 内部
 
-**根因**: 此任务为永久常驻任务，不应调用 `kanban_complete`。但 dispatcher 的 protocol_violation 检测要求 worker 要么 complete 要么 block。对于常驻任务，block 是最合适的信号。
-
----
-
-## 2026-05-26 — ad_daemon_loop 旧任务心跳问题
-
-**问题**: ad_daemon_loop.ts 硬编码了 task_id `t_dde52d68` 用于心跳，但该任务来自历史运行，已不存在。
-
-**影响**: 心跳发送失败日志 `cannot heartbeat t_dde52d68 (not running?)`，但不影响核心功能。
-
-**方案**: 待修复 — 应将心跳 task_id 改为从环境变量读取（如 `t_c63a58e7`），或移除心跳直接走 SQL 插入。
+**教训**: 飞书交互式卡片的 content 字段只接受卡片正文 JSON，不接受带 msg_type 的外层包装。
